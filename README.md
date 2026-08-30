@@ -8,7 +8,9 @@ injected into the running network (fraud rings, bank outages). A detection
 layer scores the live stream. Every number it produces is then checked against
 ground truth the detector was never allowed to see.
 
-> **Status: complete — 10 of 10 days.** Engine,
+> **Status: complete, plus two extensions.** Days 1-10 as planned, then an
+> expected-loss model and an adaptive adversary — the two gaps that most
+> separated this from something a risk team could act on. Engine,
 > ground-truth firewall, determinism gate, two chaos scenarios, three scored
 > detectors, the metrics layer, signal fusion, isotonic calibration, the
 > detector-comparison harness, the allow/review/block decision layer, the
@@ -98,6 +100,7 @@ just record          # record a run to disk (events + labels + layout)
 just replay          # play a recorded run back through the same pipeline
 just explain-debug   # show what the numeral guard rejects, and why
 just propagation     # ablation: does guilt-by-association help? (it does not)
+just adversary       # let the attacker tune itself against a fixed policy
 just scale           # 5,000-agent throughput
 ```
 
@@ -370,6 +373,87 @@ at 300 agents, and measurement says they are not beneficial at 50,000 either.
 Go earns its place here for a single-binary deployment with an embedded UI,
 zero external dependencies, and fast deterministic integer simulation — not
 for concurrency the workload cannot use.
+
+### What it is worth, in rupees
+
+Counts compare detectors. Rupees decide whether to deploy one. Every
+ingredient was already here — each transaction carries its amount — and not
+computing this was the largest gap between what the benchmark measured and
+what the decision actually turns on.
+
+One run, 300 agents, ₹60.23 crore processed:
+
+```
+fraud attempted            ₹86.35 L      1.434% of volume
+policy maximising net      review ≥ 0.01, block ≥ 0.36
+
+fraud value saved                +₹50.24 L
+cost of false blocks             -₹32,400     (36 customers wrongly stopped)
+cost of review queue             -₹5.92 L     (16,922 reviewed)
+NET                              +₹43.99 L
+```
+
+**₹73,038 net per crore processed. Fraud losses fall from 1.434% of volume to
+0.518%.**
+
+The three costs — analyst time, what a wrongly blocked customer costs, and how
+much of a blocked payment is genuinely recovered — cannot be derived from the
+simulation. They are business facts, so they are parameters, and the least
+certain one is swept rather than asserted:
+
+```
+false block ₹    review ≥   block ≥   net/crore ₹   review rate
+100              0.01       0.29           74,417         6.49%
+900              0.01       0.36           73,038         6.96%
+7000             0.01       0.40           71,696         7.14%
+```
+
+**The recommendation barely moves across a 70× range.** Net value changes by
+3%. That matters more than the headline figure: it means the cost model is not
+the thing doing the deciding.
+
+One tension worth naming — the net-maximising policy wants to review ~7% of
+traffic, while the staffing budget elsewhere in this README assumes 2%. Money
+and headcount disagree, and the report shows both rather than picking one.
+
+### The attacker gets to move too
+
+Every other number here grades the detector against a ring whose parameters
+*the defence chose*. That is a straw opponent — and worse, those parameters
+were tuned during development until the detectors could see the attack, which
+is uncomfortably close to fitting the attack to the defence.
+
+So `just adversary` searches the attacker's own parameter space — forwarding
+rate, payment size, takeover rate, ring size, hop count, ramp — maximising
+**rupees extracted**, not evasion. A ring that evades perfectly by never moving
+anything has achieved nothing. The defender's policy is fixed throughout.
+
+```
+                    extracted    evasion   AUC-PR
+baseline attack       ₹23.90 L     44.4%    0.337
+attacker best response ₹61.80 L     55.9%    0.177
+```
+
+**An adversary that tunes itself extracts 2.6× what the baseline attack does
+against the same policy.** That is the number that should be quoted.
+
+#### It found a real vulnerability
+
+The three best attacks all used **five hops**. The cycle detector searches to a
+depth of four.
+
+A laundering cell one hop longer than the search ceiling is not scored low —
+it is **structurally invisible**. Measured directly: a 3-hop ring scores
+**0.961**, a 6-hop ring scores **0.000**. There is a test pinning both numbers.
+
+Nobody found that by reading the code. An adversarial search found it in
+thirty-two trials, which is the entire argument for building one.
+
+Raising the ceiling is not free: search cost grows as fan-out to the power of
+depth, and an unbounded walk over a 5,000-node graph cannot sit in a tick loop.
+The honest position is a bounded blind spot with a stated cost of closing it —
+a real deployment would want a second, slower, offline cycle finder rather than
+a deeper online one.
 
 ### An idea that did not work
 

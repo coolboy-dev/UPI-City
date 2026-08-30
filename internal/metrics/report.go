@@ -38,6 +38,10 @@ type Report struct {
 	MinBlockPrec float64           `json:"min_block_precision"`
 	ReviewBudget float64           `json:"review_budget"`
 
+	// Money. Counts compare detectors; rupees decide whether to deploy one.
+	Economics Economics     `json:"economics"`
+	CostSweep []Sensitivity `json:"cost_sensitivity"`
+
 	Latency  LatencyReport `json:"latency"`
 	FPByArch []ArchetypeFP `json:"fp_by_archetype"`
 
@@ -72,6 +76,13 @@ func Evaluate(rows Rows, incidents []truth.Incident, seed uint64, msPerTick uint
 	pts := SweepDecisions(rows, taus)
 	r.Deployed, r.DeployedOK = BestUnderBudget(pts, r.ReviewBudget, r.MinBlockPrec)
 	r.Budgets = Budgets(pts, DefaultBudgets(), r.MinBlockPrec)
+
+	// The policy that maximises MONEY, which is not the same policy that
+	// maximises F1 or recall.
+	cost := DefaultCostModel()
+	r.Economics = cost.BestByNet(rows, taus)
+	r.CostSweep = SweepFalseBlockCost(rows, cost,
+		[]float64{100, 300, 900, 2500, 7000}, taus)
 
 	r.ByIntensity = RecallByIntensity(rows, r.Deployed.Policy.TauReview, 10)
 	r.Knee, r.KneeFound = DetectionKnee(r.ByIntensity, 0.25)
@@ -142,6 +153,34 @@ func (r Report) String() string {
 			c.Budget*100, c.Caught*100, c.BlockPrecision*100, c.FalseBlockPer1k)
 	}
 
+	// ── Money ──────────────────────────────────────────────────────────
+	e := r.Economics
+	fmt.Fprintf(&b, "\n─── expected loss, in rupees ────────────────────────────────\n")
+	fmt.Fprintf(&b, "processed         ₹%s\n", crore(e.ProcessedRupees))
+	fmt.Fprintf(&b, "fraud attempted   ₹%s  (%.3f%% of volume)\n",
+		crore(e.FraudRupees), e.LossRateBefore*100)
+	fmt.Fprintf(&b, "\npolicy maximising NET VALUE: review>=%.2f, block>=%.2f\n",
+		e.Policy.TauReview, e.Policy.TauBlock)
+	fmt.Fprintf(&b, "%-24s %16s\n", "line", "rupees")
+	fmt.Fprintf(&b, "%-24s %16s\n", "fraud value saved", "+"+crore(int64(e.Saved)))
+	fmt.Fprintf(&b, "%-24s %16s   (%d legitimate payments stopped)\n",
+		"cost of false blocks", "-"+crore(int64(e.FalseBlockCost)), e.FalseBlocks)
+	fmt.Fprintf(&b, "%-24s %16s   (%d reviewed)\n",
+		"cost of review queue", "-"+crore(int64(e.ReviewCost)), e.Reviews)
+	fmt.Fprintf(&b, "%-24s %16s\n", "NET", crore(int64(e.Net)))
+	fmt.Fprintf(&b, "\n>>> ₹%.0f net per crore processed. Fraud losses fall from\n"+
+		">>> %.3f%% of volume to %.3f%%.\n",
+		e.NetPerCrore, e.LossRateBefore*100, e.LossRateAfter*100)
+
+	fmt.Fprintf(&b, "\nsensitivity — the cost of wrongly blocking a customer is the\n"+
+		"least certain assumption here, so the policy is re-optimised across it\n\n")
+	fmt.Fprintf(&b, "%-16s %10s %10s %14s %12s\n",
+		"false block ₹", "review>=", "block>=", "net/crore ₹", "review rate")
+	for _, sv := range r.CostSweep {
+		fmt.Fprintf(&b, "%-16.0f %10.2f %10.2f %14.0f %11.2f%%\n",
+			sv.FalseBlockRupees, sv.TauReview, sv.TauBlock, sv.NetPerCrore, sv.ReviewRate*100)
+	}
+
 	// ── Sensitivity to attack strength ─────────────────────────────────
 	fmt.Fprintf(&b, "\n─── recall vs attack intensity ──────────────────────────────\n")
 	fmt.Fprintf(&b, "how loud must an attack be before this detector notices it?\n\n")
@@ -210,6 +249,19 @@ func (r Report) String() string {
 		"       separately by the dependency test in internal/detect.\n", status)
 
 	return b.String()
+}
+
+// crore renders rupees in Indian units, since the figures span several
+// orders of magnitude.
+func crore(v int64) string {
+	switch {
+	case v >= 10_000_000 || v <= -10_000_000:
+		return fmt.Sprintf("%.2f cr", float64(v)/1e7)
+	case v >= 100_000 || v <= -100_000:
+		return fmt.Sprintf("%.2f L", float64(v)/1e5)
+	default:
+		return fmt.Sprintf("%d", v)
+	}
 }
 
 func pctOf(part, whole int) float64 {

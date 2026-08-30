@@ -41,7 +41,7 @@ func (c *Consumer) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tic
 		// Drained in chunks rather than one transfer, for the same reason the
 		// mules structure: a single large movement out of a consumer account
 		// is the easiest thing in the world to flag on amount alone.
-		if self.BalanceP < 50_000 || rng.Float64() >= 0.06 {
+		if self.BalanceP < 50_000 || rng.Float64() >= w.Attack.TakeoverRate {
 			return dst
 		}
 		frac := 0.06 + rng.Float64()*0.12
@@ -265,14 +265,14 @@ func (m *Mule) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tick, d
 		// an early version of this had structuring push it to 13%, which
 		// makes any detector look good and is nothing like a real payment
 		// network. Target is 1.5-3%.
-		rate := 0.085
+		rate := w.Attack.MuleRate
 		if self.Fraud == FraudCashout {
-			rate = 0.05
+			rate *= 0.6 // the cash-out end moves less often
 		}
 		if rng.Float64() >= rate {
 			return dst
 		}
-		amt := lognormalPaise(rng, 1500, 0.9) // squarely retail-sized
+		amt := lognormalPaise(rng, w.Attack.MuleAmountRupees, 0.9)
 		if amt > self.BalanceP {
 			return dst
 		}

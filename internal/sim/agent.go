@@ -119,9 +119,21 @@ type Intent struct {
 // Because Decide may only read this, the whole phase is pure, which is what
 // makes it safe to shard across cores later while still producing a
 // bit-identical event stream.
+// Attack carries the adversary's current tuning into the decide phase.
+//
+// Read-only during Phase A like everything else on the snapshot, so an
+// adversarial search can vary these between runs without touching the tick
+// loop or breaking determinism within a run.
+type Attack struct {
+	MuleRate         float64
+	MuleAmountRupees float64
+	TakeoverRate     float64
+}
+
 type Snapshot struct {
-	Tick  obs.Tick
-	Surge float64
+	Tick   obs.Tick
+	Surge  float64
+	Attack Attack
 
 	// Target pools, held as sorted dense slices. Never maps: Go randomises
 	// map iteration order, and one range-over-map in this path would silently

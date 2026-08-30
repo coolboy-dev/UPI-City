@@ -196,6 +196,70 @@
   "detection_knee_found": true,
   "min_block_precision": 0.9,
   "review_budget": 0.02,
+  "economics": {
+    "policy": {
+      "tau_review": 0.05,
+      "tau_block": 0.37
+    },
+    "cost_model": {
+      "review_rupees": 35,
+      "false_block_rupees": 900,
+      "recovery_rate": 0.85,
+      "review_catch_rate": 0.9
+    },
+    "processed_rupees": 592345673,
+    "fraud_rupees_total": 4029357,
+    "fraud_rupees_blocked": 63928,
+    "fraud_rupees_reviewed": 2093040,
+    "fraud_rupees_allowed": 1872389,
+    "legit_rupees_blocked": 0,
+    "reviews": 14818,
+    "false_blocks": 8,
+    "saved_rupees": 1655514.4,
+    "false_block_cost_rupees": 7200,
+    "review_cost_rupees": 518630,
+    "net_rupees": 1129684.4,
+    "net_rupees_per_crore_processed": 19071.370848014954,
+    "loss_rate_no_detector": 0.006802374329152904,
+    "loss_rate_with_policy": 0.003530509794067492
+  },
+  "cost_sensitivity": [
+    {
+      "false_block_rupees": 100,
+      "tau_review": 0.05,
+      "tau_block": 0.31,
+      "net_per_crore": 19734.685223234508,
+      "review_rate": 0.06156102089777574
+    },
+    {
+      "false_block_rupees": 300,
+      "tau_review": 0.05,
+      "tau_block": 0.36,
+      "net_per_crore": 19181.83058965301,
+      "review_rate": 0.06411630217394133
+    },
+    {
+      "false_block_rupees": 900,
+      "tau_review": 0.05,
+      "tau_block": 0.37,
+      "net_per_crore": 19071.370848014954,
+      "review_rate": 0.06428549736879781
+    },
+    {
+      "false_block_rupees": 2500,
+      "tau_review": 0.05,
+      "tau_block": 0.52,
+      "net_per_crore": 19066.91601679008,
+      "review_rate": 0.06453712099191768
+    },
+    {
+      "false_block_rupees": 7000,
+      "tau_review": 0.05,
+      "tau_block": 0.52,
+      "net_per_crore": 19066.91601679008,
+      "review_rate": 0.06453712099191768
+    }
+  ],
   "latency": {
     "tau": 0.27,
     "incidents": [

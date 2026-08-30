@@ -75,14 +75,14 @@ The detection package cannot import the label type; a dependency test fails the 
 
 <h2>Headline</h2>
 <div class="grid">
-  <div class="stat"><div class="k">AUC-PR</div><div class="v">0.471</div>
-    <div class="r">0.176 – 0.608</div></div>
-  <div class="stat"><div class="k">Precision</div><div class="v">0.691</div>
-    <div class="r">0.357 – 0.912</div></div>
-  <div class="stat"><div class="k">Recall</div><div class="v">0.407</div>
-    <div class="r">0.204 – 0.525</div></div>
-  <div class="stat"><div class="k">FP / 1k legit</div><div class="v">3.60</div>
-    <div class="r">0.77 – 10.97</div></div>
+  <div class="stat"><div class="k">AUC-PR</div><div class="v">0.474</div>
+    <div class="r">0.176 – 0.617</div></div>
+  <div class="stat"><div class="k">Precision</div><div class="v">0.689</div>
+    <div class="r">0.357 – 0.948</div></div>
+  <div class="stat"><div class="k">Recall</div><div class="v">0.410</div>
+    <div class="r">0.204 – 0.536</div></div>
+  <div class="stat"><div class="k">FP / 1k legit</div><div class="v">3.71</div>
+    <div class="r">0.44 – 11.61</div></div>
   <div class="stat"><div class="k">Latency</div><div class="v">18.8s</div>
     <div class="r">8.7s – 57.9s</div></div>
   <div class="stat"><div class="k">Prevalence</div><div class="v">1.64%</div>
@@ -91,9 +91,9 @@ The detection package cannot import the label type; a dependency test fails the 
 
 <div class="callout">
 <strong>Read the spread, not the mean.</strong>
-AUC-PR 0.471 against a prevalence floor of
+AUC-PR 0.474 against a prevalence floor of
 0.016 is roughly 29×
-chance. But precision ranges from 0.357 to 0.912
+chance. But precision ranges from 0.357 to 0.948
 and latency from 8.7s to 57.9s depending only
 on which world was simulated — so quoting the best of those would be a choice about presentation
 rather than a measurement, which is why no single run is cited anywhere on this page.
@@ -103,11 +103,11 @@ rather than a measurement, which is why no single run is cited anywhere on this 
 <div class="tablewrap"><table>
 <thead><tr><th>scorer</th><th>AUC-PR</th><th>min</th><th>max</th></tr></thead>
 <tbody>
-<tr class="best"><td>these detectors</td><td>0.471</td>
-  <td>0.176</td><td>0.608</td></tr>
+<tr class="best"><td>these detectors</td><td>0.474</td>
+  <td>0.176</td><td>0.617</td></tr>
 <tr><td>always-flag</td><td>0.016</td>
   <td>0.011</td><td>0.019</td></tr><tr><td>amount&gt;50k</td><td>0.016</td>
-  <td>0.011</td><td>0.019</td></tr><tr><td>random</td><td>0.016</td>
+  <td>0.011</td><td>0.019</td></tr><tr><td>random</td><td>0.017</td>
   <td>0.011</td><td>0.019</td></tr>
 </tbody></table></div>
 
@@ -219,12 +219,12 @@ a flag, off by default.</p>
 <thead><tr><th>propagation</th><th>AUC-PR</th><th>precision</th><th>recall</th><th>merchant FP / 1k</th></tr></thead>
 <tbody>
 <tr>
-<td>off (control)</td><td>0.453</td><td>0.656</td>
-<td>0.372</td><td>22.54</td></tr><tr class="dud">
+<td>off (control)</td><td>0.457</td><td>0.665</td>
+<td>0.372</td><td>22.27</td></tr><tr class="dud">
 <td>naive</td><td>0.013</td><td>0.000</td>
-<td>0.000</td><td>929.67</td></tr><tr>
-<td>normalised &#43; hub-damped</td><td>0.201</td><td>0.252</td>
-<td>0.146</td><td>0.00</td></tr>
+<td>0.000</td><td>928.84</td></tr><tr>
+<td>normalised &#43; hub-damped</td><td>0.213</td><td>0.253</td>
+<td>0.139</td><td>0.00</td></tr>
 </tbody></table></div>
 
 <div class="callout warn"><strong>The failure was structural, not statistical.</strong> A large
@@ -316,28 +316,28 @@ operationally absurd.</p>
 <tbody>
 
 <tr class="">
-  <td>velocity only</td><td>0.447</td><td>0.647</td>
-  <td>0.349</td><td>3.34</td><td>18.4s</td></tr>
+  <td>velocity only</td><td>0.450</td><td>0.645</td>
+  <td>0.349</td><td>3.33</td><td>18.9s</td></tr>
 
 <tr class="dud">
   <td>fanout only</td><td>0.017</td><td>0.000</td>
   <td>0.000</td><td>0.51</td><td>0.8s</td></tr>
 
 <tr class="">
-  <td>cycle only</td><td>0.278</td><td>0.921</td>
-  <td>0.274</td><td>0.38</td><td>44.6s</td></tr>
+  <td>cycle only</td><td>0.279</td><td>0.923</td>
+  <td>0.274</td><td>0.37</td><td>44.6s</td></tr>
 
 <tr class="">
-  <td>all three, max-wins</td><td>0.447</td><td>0.620</td>
-  <td>0.353</td><td>3.76</td><td>19.5s</td></tr>
+  <td>all three, max-wins</td><td>0.449</td><td>0.614</td>
+  <td>0.353</td><td>3.85</td><td>20.0s</td></tr>
 
 <tr class="best">
-  <td>all three, weighted</td><td>0.517</td><td>0.725</td>
-  <td>0.400</td><td>2.63</td><td>22.0s</td></tr>
+  <td>all three, weighted</td><td>0.519</td><td>0.728</td>
+  <td>0.399</td><td>2.59</td><td>22.0s</td></tr>
 
 <tr class="">
-  <td>all three, weighted&#43;calibrated</td><td>0.514</td><td>0.709</td>
-  <td>0.406</td><td>2.88</td><td>22.0s</td></tr>
+  <td>all three, weighted&#43;calibrated</td><td>0.517</td><td>0.712</td>
+  <td>0.401</td><td>2.80</td><td>20.1s</td></tr>
 
 </tbody></table></div>
 <div class="callout"><strong>Weighted fusion beats loudest-wins on every axis.</strong>
@@ -347,7 +347,7 @@ sum with a strongly negative bias requires signals to agree, which is what corro
 
 
 
-<h3>Calibration — expected error 0.0062</h3>
+<h3>Calibration — expected error 0.0063</h3>
 <p class="note">Fitted on seeds 1–5, reported on seeds 6–10 the calibrator never saw. A score of
 0.3 should mean "about 30% of transactions like this are fraud". Isotonic regression is monotone,
 so calibration cannot reorder anything and therefore cannot improve detection — its value is
@@ -355,17 +355,17 @@ entirely interpretive.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>score bucket</th><th>n</th><th>predicted</th><th>observed</th></tr></thead>
 <tbody>
-<tr><td>0.00 – 0.10</td><td>1153416</td>
-  <td>0.002</td><td>0.007</td></tr><tr><td>0.10 – 0.20</td><td>17562</td>
-  <td>0.136</td><td>0.168</td></tr><tr><td>0.20 – 0.30</td><td>5700</td>
-  <td>0.227</td><td>0.262</td></tr><tr><td>0.30 – 0.40</td><td>1496</td>
-  <td>0.354</td><td>0.384</td></tr><tr><td>0.40 – 0.50</td><td>1691</td>
-  <td>0.434</td><td>0.584</td></tr><tr><td>0.50 – 0.60</td><td>687</td>
-  <td>0.543</td><td>0.798</td></tr><tr><td>0.60 – 0.70</td><td>383</td>
-  <td>0.659</td><td>0.809</td></tr><tr><td>0.70 – 0.80</td><td>501</td>
-  <td>0.749</td><td>0.904</td></tr><tr><td>0.80 – 0.90</td><td>547</td>
-  <td>0.848</td><td>0.971</td></tr><tr><td>0.90 – 1.00</td><td>4277</td>
-  <td>0.987</td><td>0.998</td></tr>
+<tr><td>0.00 – 0.10</td><td>1156508</td>
+  <td>0.002</td><td>0.007</td></tr><tr><td>0.10 – 0.20</td><td>15905</td>
+  <td>0.150</td><td>0.184</td></tr><tr><td>0.20 – 0.30</td><td>4304</td>
+  <td>0.223</td><td>0.280</td></tr><tr><td>0.30 – 0.40</td><td>1038</td>
+  <td>0.362</td><td>0.326</td></tr><tr><td>0.40 – 0.50</td><td>2062</td>
+  <td>0.442</td><td>0.537</td></tr><tr><td>0.50 – 0.60</td><td>669</td>
+  <td>0.550</td><td>0.806</td></tr><tr><td>0.60 – 0.70</td><td>469</td>
+  <td>0.646</td><td>0.876</td></tr><tr><td>0.70 – 0.80</td><td>285</td>
+  <td>0.738</td><td>0.916</td></tr><tr><td>0.80 – 0.90</td><td>199</td>
+  <td>0.847</td><td>0.930</td></tr><tr><td>0.90 – 1.00</td><td>4818</td>
+  <td>0.984</td><td>0.995</td></tr>
 </tbody></table></div>
 
 
@@ -513,7 +513,7 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 <line x1="64" y1="116.80" x2="496" y2="116.80" stroke="var(--grid)" stroke-width="1"/>
 <text x="58" y="119.80" font-size="10" text-anchor="end" fill="var(--muted)">0.92</text>
 <line x1="64" y1="44.00" x2="496" y2="44.00" stroke="var(--grid)" stroke-width="1"/>
-<text x="58" y="47.00" font-size="10" text-anchor="end" fill="var(--muted)">1.15</text>
+<text x="58" y="47.00" font-size="10" text-anchor="end" fill="var(--muted)">1.14</text>
 <line x1="64.00" y1="44" x2="64.00" y2="408" stroke="var(--grid)" stroke-width="1"/>
 <text x="64.00" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">0</text>
 <line x1="150.40" y1="44" x2="150.40" y2="408" stroke="var(--grid)" stroke-width="1"/>
@@ -525,20 +525,20 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 <line x1="409.60" y1="44" x2="409.60" y2="408" stroke="var(--grid)" stroke-width="1"/>
 <text x="409.60" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">0.92</text>
 <line x1="496.00" y1="44" x2="496.00" y2="408" stroke="var(--grid)" stroke-width="1"/>
-<text x="496.00" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">1.15</text>
+<text x="496.00" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">1.14</text>
 <rect x="64" y="44" width="432" height="364" fill="none" stroke="var(--axis)" stroke-width="1"/>
 <polyline points="64.00,408.00 496.00,44.00" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round"/>
-<polyline points="64.77,405.75 115.36,354.80 149.48,324.79 197.26,286.06 227.29,222.63 268.40,154.93 312.03,151.21 346.14,121.13 383.14,100.02 435.64,91.48" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round"/>
-<circle cx="64.77" cy="405.75" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="115.36" cy="354.80" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="149.48" cy="324.79" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="197.26" cy="286.06" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="227.29" cy="222.63" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="268.40" cy="154.93" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="312.03" cy="151.21" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="346.14" cy="121.13" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="383.14" cy="100.02" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="435.64" cy="91.48" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<polyline points="64.84,405.64 120.59,349.52 148.09,319.12 200.61,304.46 230.73,237.14 271.49,151.81 307.60,129.35 342.60,116.80 383.60,112.40 435.29,91.48" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="64.84" cy="405.64" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="120.59" cy="349.52" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="148.09" cy="319.12" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="200.61" cy="304.46" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="230.73" cy="237.14" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="271.49" cy="151.81" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="307.60" cy="129.35" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="342.60" cy="116.80" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="383.60" cy="112.40" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="435.29" cy="91.48" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
 <line x1="346.00" y1="54.00" x2="364.00" y2="54.00" stroke="#2563eb" stroke-width="2.5"/>
 <text x="370.00" y="58.00" font-size="11" fill="var(--fg)">observed</text>
 <line x1="346.00" y1="70.00" x2="364.00" y2="70.00" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="5 4"/>
@@ -661,19 +661,19 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 <text x="210" y="26" font-size="14" font-weight="600" fill="var(--fg)">Does spreading suspicion along the graph help? (measured, not assumed)</text>
 <rect x="210" y="51.14" width="466.00" height="19.72" fill="#2563eb" rx="2"/>
 <text x="202" y="65.00" font-size="11" text-anchor="end" fill="var(--fg)">off (control)</text>
-<text x="682.00" y="65.00" font-size="11" fill="var(--muted)">AUC-PR 0.453</text>
-<rect x="210" y="85.14" width="11.30" height="19.72" fill="#dc2626" rx="2"/>
+<text x="682.00" y="65.00" font-size="11" fill="var(--muted)">AUC-PR 0.457</text>
+<rect x="210" y="85.14" width="11.17" height="19.72" fill="#dc2626" rx="2"/>
 <text x="202" y="99.00" font-size="11" text-anchor="end" fill="var(--fg)"></text>
-<text x="227.30" y="99.00" font-size="11" fill="var(--muted)">23 merchant FP / 1k</text>
-<rect x="210" y="119.14" width="13.37" height="19.72" fill="#2563eb" rx="2"/>
+<text x="227.17" y="99.00" font-size="11" fill="var(--muted)">22 merchant FP / 1k</text>
+<rect x="210" y="119.14" width="13.27" height="19.72" fill="#2563eb" rx="2"/>
 <text x="202" y="133.00" font-size="11" text-anchor="end" fill="var(--fg)">naive</text>
-<text x="229.37" y="133.00" font-size="11" fill="var(--muted)">AUC-PR 0.013</text>
+<text x="229.27" y="133.00" font-size="11" fill="var(--muted)">AUC-PR 0.013</text>
 <rect x="210" y="153.14" width="466.00" height="19.72" fill="#dc2626" rx="2"/>
 <text x="202" y="167.00" font-size="11" text-anchor="end" fill="var(--fg)"></text>
-<text x="682.00" y="167.00" font-size="11" fill="var(--muted)">930 merchant FP / 1k</text>
-<rect x="210" y="187.14" width="206.89" height="19.72" fill="#2563eb" rx="2"/>
+<text x="682.00" y="167.00" font-size="11" fill="var(--muted)">929 merchant FP / 1k</text>
+<rect x="210" y="187.14" width="217.35" height="19.72" fill="#2563eb" rx="2"/>
 <text x="202" y="201.00" font-size="11" text-anchor="end" fill="var(--fg)">normalised + hub-damped</text>
-<text x="422.89" y="201.00" font-size="11" fill="var(--muted)">AUC-PR 0.201</text>
+<text x="433.35" y="201.00" font-size="11" fill="var(--muted)">AUC-PR 0.213</text>
 <rect x="210" y="221.14" width="0.00" height="19.72" fill="#dc2626" rx="2"/>
 <text x="202" y="235.00" font-size="11" text-anchor="end" fill="var(--fg)"></text>
 <text x="216.00" y="235.00" font-size="11" fill="var(--muted)">0 merchant FP / 1k</text>
@@ -763,41 +763,41 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 <td>0.357</td><td>0.204</td>
 <td>4.00</td><td>11.0s</td>
 <td>0</td></tr><tr>
-<td>2</td><td>1.52%</td><td>0.341</td>
-<td>0.743</td><td>0.232</td>
-<td>1.24</td><td>13.7s</td>
+<td>2</td><td>1.53%</td><td>0.340</td>
+<td>0.711</td><td>0.229</td>
+<td>1.44</td><td>13.7s</td>
 <td>0</td></tr><tr>
-<td>3</td><td>1.76%</td><td>0.487</td>
-<td>0.680</td><td>0.440</td>
-<td>3.70</td><td>17.8s</td>
+<td>3</td><td>1.76%</td><td>0.500</td>
+<td>0.647</td><td>0.464</td>
+<td>4.55</td><td>17.8s</td>
 <td>0</td></tr><tr>
-<td>4</td><td>1.92%</td><td>0.520</td>
-<td>0.545</td><td>0.525</td>
-<td>8.57</td><td>12.9s</td>
+<td>4</td><td>1.92%</td><td>0.530</td>
+<td>0.557</td><td>0.525</td>
+<td>8.19</td><td>12.9s</td>
 <td>0</td></tr><tr>
-<td>5</td><td>1.54%</td><td>0.597</td>
-<td>0.912</td><td>0.509</td>
-<td>0.77</td><td>22.0s</td>
+<td>5</td><td>1.54%</td><td>0.601</td>
+<td>0.948</td><td>0.511</td>
+<td>0.44</td><td>22.0s</td>
 <td>0</td></tr><tr>
-<td>6</td><td>1.89%</td><td>0.596</td>
-<td>0.864</td><td>0.431</td>
-<td>1.30</td><td>16.2s</td>
+<td>6</td><td>1.89%</td><td>0.594</td>
+<td>0.862</td><td>0.428</td>
+<td>1.32</td><td>16.2s</td>
 <td>0</td></tr><tr>
-<td>7</td><td>1.62%</td><td>0.459</td>
-<td>0.721</td><td>0.366</td>
-<td>2.34</td><td>57.9s</td>
+<td>7</td><td>1.63%</td><td>0.458</td>
+<td>0.716</td><td>0.364</td>
+<td>2.39</td><td>57.9s</td>
 <td>0</td></tr><tr>
-<td>8</td><td>1.52%</td><td>0.448</td>
-<td>0.791</td><td>0.328</td>
-<td>1.33</td><td>10.6s</td>
+<td>8</td><td>1.52%</td><td>0.447</td>
+<td>0.810</td><td>0.325</td>
+<td>1.17</td><td>10.6s</td>
 <td>0</td></tr><tr>
-<td>9</td><td>1.73%</td><td>0.608</td>
-<td>0.833</td><td>0.511</td>
-<td>1.80</td><td>8.7s</td>
+<td>9</td><td>1.73%</td><td>0.617</td>
+<td>0.823</td><td>0.515</td>
+<td>1.96</td><td>8.7s</td>
 <td>0</td></tr><tr>
-<td>10</td><td>1.81%</td><td>0.476</td>
-<td>0.465</td><td>0.519</td>
-<td>10.97</td><td>16.7s</td>
+<td>10</td><td>1.80%</td><td>0.478</td>
+<td>0.459</td><td>0.536</td>
+<td>11.61</td><td>16.7s</td>
 <td>0</td></tr>
 </tbody></table></div>
 

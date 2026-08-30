@@ -72,6 +72,18 @@ type Config struct {
 	Victims     int
 	AmountScale float64
 
+	// ─── Attacker tuning ───────────────────────────────────────────────
+	//
+	// Exposed so an adversary can search them. A ring with parameters fixed
+	// by the defence is a straw opponent: the detector gets graded against
+	// exactly the attack it was built for. Real launderers observe what gets
+	// stopped and move, and the only honest way to report detection quality
+	// is at the attacker's BEST RESPONSE rather than at whatever settings
+	// happened to be committed.
+	MuleRate         float64 // chance per tick an active mule forwards
+	MuleAmountRupees float64 // median size of a forwarded payment
+	TakeoverRate     float64 // chance per tick a compromised account pays in
+
 	// Bank outage.
 	OutageFailRate float64
 	OutageExtraMs  uint16
@@ -84,17 +96,20 @@ type Config struct {
 // DefaultConfig returns moderate severity for both scenarios.
 func DefaultConfig() Config {
 	return Config{
-		StartTick:      4000,
-		RampTicks:      2000,
-		Duration:       6000,
-		RingSize:       12,
-		Hops:           3,
-		Victims:        12,
-		AmountScale:    1.0,
-		OutageFailRate: 0.40,
-		OutageExtraMs:  2000,
-		OutageBank:     -1,
-		BotCount:       6,
+		StartTick:        4000,
+		RampTicks:        2000,
+		Duration:         6000,
+		RingSize:         12,
+		Hops:             3,
+		Victims:          12,
+		AmountScale:      1.0,
+		MuleRate:         0.085,
+		MuleAmountRupees: 1500,
+		TakeoverRate:     0.06,
+		OutageFailRate:   0.40,
+		OutageExtraMs:    2000,
+		OutageBank:       -1,
+		BotCount:         6,
 	}
 }
 

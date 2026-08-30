@@ -86,6 +86,10 @@ all:
     just propagation
     just report-html
 
+# ADVERSARY: let the attacker tune itself against a fixed policy
+adversary trials="32" seeds="2":
+    go run ./cmd/adversary -trials {{trials}} -seeds {{seeds}} -ticks 25000
+
 # ABLATION: does guilt-by-association help? three arms, identical traffic
 propagation seeds="6":
     go run ./cmd/propagation -seeds {{seeds}} -ticks 40000

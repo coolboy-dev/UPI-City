@@ -372,6 +372,11 @@ func (w *World) Step() []obs.Event {
 	t := w.Now
 	w.snap.Tick = t
 	w.snap.Surge = w.Surge(t)
+	w.snap.Attack = Attack{
+		MuleRate:         w.chaosCfg.MuleRate,
+		MuleAmountRupees: w.chaosCfg.MuleAmountRupees,
+		TakeoverRate:     w.chaosCfg.TakeoverRate,
+	}
 	w.events = w.events[:0]
 
 	// Chaos is applied before anything else this tick, through the single

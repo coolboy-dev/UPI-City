@@ -4,13 +4,13 @@
     "detectors": [
       "velocity"
     ],
-    "aucpr_mean": 0.4471300590146928,
-    "aucpr_min": 0.3770496449244626,
-    "aucpr_max": 0.5585496691137057,
-    "precision_mean": 0.6466154250451527,
-    "recall_mean": 0.3490114930632634,
-    "fp_per_1k_legit_mean": 3.3385792154568383,
-    "latency_seconds_mean": 18.42,
+    "aucpr_mean": 0.44995454759742176,
+    "aucpr_min": 0.37941136929635044,
+    "aucpr_max": 0.5708370606670784,
+    "precision_mean": 0.6453700295295446,
+    "recall_mean": 0.34937069413500216,
+    "fp_per_1k_legit_mean": 3.3321477988481263,
+    "latency_seconds_mean": 18.880000000000003,
     "incidents_never_detected": 0,
     "incidents_total": 5
   },
@@ -19,12 +19,12 @@
     "detectors": [
       "fanout"
     ],
-    "aucpr_mean": 0.017119009173724435,
-    "aucpr_min": 0.015151450954804102,
-    "aucpr_max": 0.018859077668694345,
+    "aucpr_mean": 0.0171418548998397,
+    "aucpr_min": 0.015172828730499039,
+    "aucpr_max": 0.018896187152750404,
     "precision_mean": 0,
     "recall_mean": 0,
-    "fp_per_1k_legit_mean": 0.5139389041731162,
+    "fp_per_1k_legit_mean": 0.5139742095729021,
     "latency_seconds_mean": 0.8400000000000001,
     "incidents_never_detected": 0,
     "incidents_total": 5
@@ -34,12 +34,12 @@
     "detectors": [
       "cycle"
     ],
-    "aucpr_mean": 0.2783512099332014,
-    "aucpr_min": 0.1856890036804498,
-    "aucpr_max": 0.399204726631114,
-    "precision_mean": 0.9206817541329538,
-    "recall_mean": 0.27356276983963956,
-    "fp_per_1k_legit_mean": 0.3753998776514454,
+    "aucpr_mean": 0.27885871776940163,
+    "aucpr_min": 0.18686805680564658,
+    "aucpr_max": 0.40066497479937585,
+    "precision_mean": 0.9226037987654945,
+    "recall_mean": 0.27424789748851175,
+    "fp_per_1k_legit_mean": 0.36859306328389396,
     "latency_seconds_mean": 44.559999999999995,
     "incidents_never_detected": 0,
     "incidents_total": 5
@@ -51,13 +51,13 @@
       "fanout",
       "cycle"
     ],
-    "aucpr_mean": 0.4470654438029614,
-    "aucpr_min": 0.37868444729980805,
-    "aucpr_max": 0.5648697801517383,
-    "precision_mean": 0.6196187486649298,
-    "recall_mean": 0.352895506874378,
-    "fp_per_1k_legit_mean": 3.7625210698279714,
-    "latency_seconds_mean": 19.54,
+    "aucpr_mean": 0.44880353474355256,
+    "aucpr_min": 0.3789400782842651,
+    "aucpr_max": 0.5755926179661875,
+    "precision_mean": 0.6141863501216244,
+    "recall_mean": 0.35318097977428686,
+    "fp_per_1k_legit_mean": 3.8483323911450924,
+    "latency_seconds_mean": 20,
     "incidents_never_detected": 0,
     "incidents_total": 5
   },
@@ -68,12 +68,12 @@
       "fanout",
       "cycle"
     ],
-    "aucpr_mean": 0.5170651040912044,
-    "aucpr_min": 0.44761979344193426,
-    "aucpr_max": 0.6075659321561563,
-    "precision_mean": 0.7246237803265271,
-    "recall_mean": 0.4001536365315682,
-    "fp_per_1k_legit_mean": 2.6288475359453707,
+    "aucpr_mean": 0.5186179865132301,
+    "aucpr_min": 0.44650568331409113,
+    "aucpr_max": 0.6171951014054501,
+    "precision_mean": 0.7280107618591607,
+    "recall_mean": 0.399087399468339,
+    "fp_per_1k_legit_mean": 2.5857183445193104,
     "latency_seconds_mean": 22.02,
     "incidents_never_detected": 0,
     "incidents_total": 5
@@ -85,86 +85,86 @@
       "fanout",
       "cycle"
     ],
-    "aucpr_mean": 0.5144075405051868,
-    "aucpr_min": 0.4443338327039066,
-    "aucpr_max": 0.60342702659896,
-    "precision_mean": 0.7094938592099119,
-    "recall_mean": 0.4057780567773025,
-    "fp_per_1k_legit_mean": 2.875704717572913,
-    "latency_seconds_mean": 22.02,
+    "aucpr_mean": 0.5167217489808638,
+    "aucpr_min": 0.4421531396994719,
+    "aucpr_max": 0.6145976630742634,
+    "precision_mean": 0.7124043120061372,
+    "recall_mean": 0.4013209992704446,
+    "fp_per_1k_legit_mean": 2.804825387027217,
+    "latency_seconds_mean": 20.14,
     "incidents_never_detected": 0,
     "incidents_total": 5,
-    "expected_calibration_error": 0.006176469156723689,
+    "expected_calibration_error": 0.00625200972163652,
     "reliability": [
       {
         "lo": 0,
         "hi": 0.1,
-        "n": 1153416,
-        "predicted": 0.0020323698016598865,
-        "observed": 0.007106716050410259
+        "n": 1156508,
+        "predicted": 0.002226102458271836,
+        "observed": 0.007410238407343486
       },
       {
         "lo": 0.1,
         "hi": 0.2,
-        "n": 17562,
-        "predicted": 0.13640277666984016,
-        "observed": 0.16769160687848764
+        "n": 15905,
+        "predicted": 0.1499444103457923,
+        "observed": 0.18390443256837471
       },
       {
         "lo": 0.2,
         "hi": 0.3,
-        "n": 5700,
-        "predicted": 0.22700743843647161,
-        "observed": 0.26228070175438595
+        "n": 4304,
+        "predicted": 0.22282218390554645,
+        "observed": 0.2795074349442379
       },
       {
         "lo": 0.3,
         "hi": 0.4,
-        "n": 1496,
-        "predicted": 0.35390966662087076,
-        "observed": 0.38435828877005346
+        "n": 1038,
+        "predicted": 0.36200742241486245,
+        "observed": 0.325626204238921
       },
       {
         "lo": 0.4,
         "hi": 0.5,
-        "n": 1691,
-        "predicted": 0.4336712795802124,
-        "observed": 0.5842696629213483
+        "n": 2062,
+        "predicted": 0.44181509772915933,
+        "observed": 0.5373423860329777
       },
       {
         "lo": 0.5,
         "hi": 0.6,
-        "n": 687,
-        "predicted": 0.5428431986411412,
-        "observed": 0.7976710334788938
+        "n": 669,
+        "predicted": 0.549821035082905,
+        "observed": 0.8056801195814649
       },
       {
         "lo": 0.6,
         "hi": 0.7,
-        "n": 383,
-        "predicted": 0.6587111701424859,
-        "observed": 0.8093994778067886
+        "n": 469,
+        "predicted": 0.645521825488684,
+        "observed": 0.8763326226012793
       },
       {
         "lo": 0.7,
         "hi": 0.8,
-        "n": 501,
-        "predicted": 0.7493003459643727,
-        "observed": 0.9041916167664671
+        "n": 285,
+        "predicted": 0.7382648644283714,
+        "observed": 0.9157894736842105
       },
       {
         "lo": 0.8,
         "hi": 0.9,
-        "n": 547,
-        "predicted": 0.8475874440016087,
-        "observed": 0.9707495429616088
+        "n": 199,
+        "predicted": 0.8469055725425787,
+        "observed": 0.9296482412060302
       },
       {
         "lo": 0.9,
         "hi": 1,
-        "n": 4277,
-        "predicted": 0.9870117914816383,
-        "observed": 0.9976619125555296
+        "n": 4818,
+        "predicted": 0.9838798557029198,
+        "observed": 0.9954337899543378
       }
     ]
   }

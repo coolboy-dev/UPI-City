@@ -50,7 +50,25 @@ type Cycle struct {
 	passRetain float64
 	// cycleWindow bounds how far back the graph search may look.
 	cycleWindow obs.Tick
-	maxHops     int
+	// maxHops bounds the search depth — and is a KNOWN BLIND SPOT.
+	//
+	// A laundering cell longer than this produces a cycle the detector cannot
+	// see at all: not scored low, structurally invisible. Measured directly, a
+	// 3-hop ring scores 0.961 and a 6-hop ring scores 0.000.
+	//
+	// This was not found by reading the code. The adversarial search in
+	// cmd/adversary discovered it while maximising extracted value: the three
+	// best attacks it found all used five hops against a four-hop search, and
+	// together they extracted 2.6x what the baseline attack managed against the
+	// same fixed policy.
+	//
+	// Raising the ceiling is not free — search cost grows as fan-out to the
+	// power of depth, and an unbounded walk over a 5,000-node graph is not
+	// viable inside a tick loop. The honest position is that this is a bounded
+	// blind spot with a stated cost of closing it, and that a real deployment
+	// would want a second, slower, offline cycle finder rather than a deeper
+	// online one.
+	maxHops int
 	// minHops excludes 2-cycles.
 	//
 	// The first version of this detector flagged 228 of 231 ordinary
