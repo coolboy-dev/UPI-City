@@ -1,0 +1,25 @@
+# Build output
+/upicity
+/dist
+node_modules/
+web/.next/
+web/out/
+
+# Recorded event streams are large (~12 MB of events plus ~3.5 MB of labels
+# per 20k-tick seed) and are fully regenerable from the seed — that is the
+# point of the determinism gate. `just record` writes them locally for replay;
+# the derived artefacts that back the reported numbers ARE committed, via the
+# negated patterns below.
+results/**/events.jsonl
+results/**/labels.jsonl
+results/**/world.json
+results/**/*.jsonl
+!results/**/findings.jsonl.zst
+!results/**/metrics.json
+!results/**/meta.json
+!results/sweep.json
+!results/explanations.json
+!results/figures/
+
+# Local editor/tooling state, not part of the project
+.claude/

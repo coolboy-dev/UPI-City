@@ -1,0 +1,48 @@
+{
+  "bank-outage|w33300|f2400|a540": {
+    "incident_id": 1,
+    "headline": "Bank outage, 600 seconds duration, 2413 failed settlements",
+    "narrative": "A payment provider failure caused a system-wide outage lasting 600 seconds starting at tick 4001. During this window of 33,301 transactions, 2,413 failed to settle and 538 legitimate payments were wrongly scored as failures. Customer retry attempts during the downtime artificially inflated transaction rates, mimicking an attack pattern but resulting from infrastructure failure rather than fraud.",
+    "action": "Monitor for resolution of provider outage.",
+    "source": "llm",
+    "elapsed": "3.714s"
+  },
+  "bank-outage|w34300|f3250|a610": {
+    "incident_id": 1,
+    "headline": "Bank Outage, 34,308 transactions in window, 3,257 failures",
+    "narrative": "A payment provider failure caused a system outage lasting 600 seconds starting at tick 4001. During this period, 3,257 of the 34,308 attempted transactions failed to settle. Customer retry behavior increased transaction volume and mimicked an attack pattern; however, 613 legitimate transactions were incorrectly flagged as suspicious due to these infrastructure issues.",
+    "action": "Review system logs for provider failure at tick 4001.",
+    "source": "llm",
+    "elapsed": "3.893s"
+  },
+  "fraud-ring|m24|t2480|r4030000|dtrue|s[cycle velocity]": {
+    "incident_id": 1,
+    "headline": "Suspected laundering ring — 24 accounts, ₹40,30,400 moved",
+    "narrative": "24 accounts moved ₹40,30,400 across 2481 transactions (median ₹722) starting at tick 4001, over roughly 600 seconds. The strongest evidence was velocity: transaction rate far above this account's own established norm. Corroborated by cycle. First flagged 11.0 seconds after the activity began. 80% of the ring's transactions went through undetected.",
+    "action": "4468 transactions are queued for review; none were blocked. Prioritise the accounts with the highest inbound concentration.",
+    "source": "template"
+  },
+  "fraud-ring|m24|t3740|r6730000|dtrue|s[cycle velocity]": {
+    "incident_id": 1,
+    "headline": "Suspected laundering ring — 24 accounts, ₹67,33,899 moved",
+    "narrative": "24 accounts moved ₹67,33,899 across 3739 transactions (median ₹895) starting at tick 4001, over roughly 600 seconds. The strongest evidence was velocity: transaction rate far above this account's own established norm. Corroborated by cycle. First flagged 13.7 seconds after the activity began. 77% of the ring's transactions went through undetected.",
+    "action": "816 transactions were blocked and 4842 queued for review. Review the full member set before releasing any holds.",
+    "source": "template"
+  },
+  "fraud-ring|m24|t4000|r7570000|dtrue|s[cycle velocity]": {
+    "incident_id": 1,
+    "headline": "Fraud ring detected in 24 accounts involving 3998 transactions totaling 7573981 rupees",
+    "narrative": "Velocity signals show transaction rates exceeding account norms. Cycle patterns indicate funds rapidly returning to origin via intermediaries with minimal loss. Detection occurred after 17.8 seconds; 670 accounts were blocked while 4473 remain queued for review.",
+    "action": "Review remaining 4473 transactions and monitor velocity/cycle indicators.",
+    "source": "llm",
+    "elapsed": "3.365s"
+  },
+  "fraud-ring|m24|t4420|r8640000|dtrue|s[cycle velocity]": {
+    "incident_id": 1,
+    "headline": "Fraud ring detected across 24 accounts involving 8637301 rupees",
+    "narrative": "Velocity signals show transaction rates exceeding account norms. Cycle patterns indicate funds rapidly returning to origin via intermediaries with minimal loss. Of 4416 transactions, only 1289 were blocked; 4811 remain queued for review as the system failed to detect 63% of activity within 18.8 seconds.",
+    "action": "Review all 4811 queued transactions immediately.",
+    "source": "llm",
+    "elapsed": "3.55s"
+  }
+}

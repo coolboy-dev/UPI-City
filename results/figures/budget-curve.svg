@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="680" height="400" font-family="ui-sans-serif,system-ui,sans-serif">
+<style>
+svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
+@media (prefers-color-scheme:dark){svg{--bg:#111;--fg:#e8e8e8;--muted:#999;--grid:#2a2a2a;--axis:#444}}
+</style>
+<rect width="680" height="400" fill="var(--bg)"/>
+<text x="64" y="26" font-size="14" font-weight="600" fill="var(--fg)">What a bigger review queue buys</text>
+<line x1="64" y1="348.00" x2="656" y2="348.00" stroke="var(--grid)" stroke-width="1"/>
+<text x="58" y="351.00" font-size="10" text-anchor="end" fill="var(--muted)">0</text>
+<line x1="64" y1="287.20" x2="656" y2="287.20" stroke="var(--grid)" stroke-width="1"/>
+<text x="58" y="290.20" font-size="10" text-anchor="end" fill="var(--muted)">0.20</text>
+<line x1="64" y1="226.40" x2="656" y2="226.40" stroke="var(--grid)" stroke-width="1"/>
+<text x="58" y="229.40" font-size="10" text-anchor="end" fill="var(--muted)">0.40</text>
+<line x1="64" y1="165.60" x2="656" y2="165.60" stroke="var(--grid)" stroke-width="1"/>
+<text x="58" y="168.60" font-size="10" text-anchor="end" fill="var(--muted)">0.60</text>
+<line x1="64" y1="104.80" x2="656" y2="104.80" stroke="var(--grid)" stroke-width="1"/>
+<text x="58" y="107.80" font-size="10" text-anchor="end" fill="var(--muted)">0.80</text>
+<line x1="64" y1="44.00" x2="656" y2="44.00" stroke="var(--grid)" stroke-width="1"/>
+<text x="58" y="47.00" font-size="10" text-anchor="end" fill="var(--muted)">1</text>
+<line x1="64.00" y1="44" x2="64.00" y2="348" stroke="var(--grid)" stroke-width="1"/>
+<text x="64.00" y="364" font-size="10" text-anchor="middle" fill="var(--muted)">0</text>
+<line x1="182.40" y1="44" x2="182.40" y2="348" stroke="var(--grid)" stroke-width="1"/>
+<text x="182.40" y="364" font-size="10" text-anchor="middle" fill="var(--muted)">2</text>
+<line x1="300.80" y1="44" x2="300.80" y2="348" stroke="var(--grid)" stroke-width="1"/>
+<text x="300.80" y="364" font-size="10" text-anchor="middle" fill="var(--muted)">4</text>
+<line x1="419.20" y1="44" x2="419.20" y2="348" stroke="var(--grid)" stroke-width="1"/>
+<text x="419.20" y="364" font-size="10" text-anchor="middle" fill="var(--muted)">6</text>
+<line x1="537.60" y1="44" x2="537.60" y2="348" stroke="var(--grid)" stroke-width="1"/>
+<text x="537.60" y="364" font-size="10" text-anchor="middle" fill="var(--muted)">8</text>
+<line x1="656.00" y1="44" x2="656.00" y2="348" stroke="var(--grid)" stroke-width="1"/>
+<text x="656.00" y="364" font-size="10" text-anchor="middle" fill="var(--muted)">10</text>
+<rect x="64" y="44" width="592" height="304" fill="none" stroke="var(--axis)" stroke-width="1"/>
+<polyline points="69.92,332.32 75.84,318.47 93.60,295.80 123.20,276.32 182.40,242.01 360.00,207.82 656.00,191.65" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linejoin="round"/>
+<circle cx="69.92" cy="332.32" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="75.84" cy="318.47" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="93.60" cy="295.80" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="123.20" cy="276.32" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="182.40" cy="242.01" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="360.00" cy="207.82" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="656.00" cy="191.65" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="182.40" cy="242.01" r="4.5" fill="#dc2626" stroke="var(--bg)" stroke-width="1.5"/>
+<text x="190.40" y="235.01" font-size="11" fill="#dc2626">deployed: 35% caught</text>
+<line x1="506.00" y1="54.00" x2="524.00" y2="54.00" stroke="#2563eb" stroke-width="2.5"/>
+<text x="530.00" y="58.00" font-size="11" fill="var(--fg)">fraud caught</text>
+<line x1="506.00" y1="70.00" x2="524.00" y2="70.00" stroke="#dc2626" stroke-width="2.5"/>
+<text x="530.00" y="74.00" font-size="11" fill="var(--fg)">chosen policy</text>
+<text x="360.0" y="390" font-size="11" text-anchor="middle" fill="var(--muted)">review budget (% of all traffic)</text>
+<text transform="translate(16,196.0) rotate(-90)" font-size="11" text-anchor="middle" fill="var(--muted)">share of fraud caught</text>
+</svg>

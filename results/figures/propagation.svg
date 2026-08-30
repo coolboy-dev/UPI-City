@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 282" width="700" height="282" font-family="ui-sans-serif,system-ui,sans-serif">
+<style>
+svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
+@media (prefers-color-scheme:dark){svg{--bg:#111;--fg:#e8e8e8;--muted:#999;--grid:#2a2a2a;--axis:#444}}
+</style>
+<rect width="700" height="282" fill="var(--bg)"/>
+<text x="210" y="26" font-size="14" font-weight="600" fill="var(--fg)">Does spreading suspicion along the graph help? (measured, not assumed)</text>
+<rect x="210" y="51.14" width="466.00" height="19.72" fill="#2563eb" rx="2"/>
+<text x="202" y="65.00" font-size="11" text-anchor="end" fill="var(--fg)">off (control)</text>
+<text x="682.00" y="65.00" font-size="11" fill="var(--muted)">AUC-PR 0.453</text>
+<rect x="210" y="85.14" width="11.30" height="19.72" fill="#dc2626" rx="2"/>
+<text x="202" y="99.00" font-size="11" text-anchor="end" fill="var(--fg)"></text>
+<text x="227.30" y="99.00" font-size="11" fill="var(--muted)">23 merchant FP / 1k</text>
+<rect x="210" y="119.14" width="13.37" height="19.72" fill="#2563eb" rx="2"/>
+<text x="202" y="133.00" font-size="11" text-anchor="end" fill="var(--fg)">naive</text>
+<text x="229.37" y="133.00" font-size="11" fill="var(--muted)">AUC-PR 0.013</text>
+<rect x="210" y="153.14" width="466.00" height="19.72" fill="#dc2626" rx="2"/>
+<text x="202" y="167.00" font-size="11" text-anchor="end" fill="var(--fg)"></text>
+<text x="682.00" y="167.00" font-size="11" fill="var(--muted)">930 merchant FP / 1k</text>
+<rect x="210" y="187.14" width="206.89" height="19.72" fill="#2563eb" rx="2"/>
+<text x="202" y="201.00" font-size="11" text-anchor="end" fill="var(--fg)">normalised + hub-damped</text>
+<text x="422.89" y="201.00" font-size="11" fill="var(--muted)">AUC-PR 0.201</text>
+<rect x="210" y="221.14" width="0.00" height="19.72" fill="#dc2626" rx="2"/>
+<text x="202" y="235.00" font-size="11" text-anchor="end" fill="var(--fg)"></text>
+<text x="216.00" y="235.00" font-size="11" fill="var(--muted)">0 merchant FP / 1k</text>
+<line x1="526.00" y1="54.00" x2="544.00" y2="54.00" stroke="#2563eb" stroke-width="2.5"/>
+<text x="550.00" y="58.00" font-size="11" fill="var(--fg)">detection quality</text>
+<line x1="526.00" y1="70.00" x2="544.00" y2="70.00" stroke="#dc2626" stroke-width="2.5"/>
+<text x="550.00" y="74.00" font-size="11" fill="var(--fg)">harm to merchants</text>
+</svg>

@@ -1,0 +1,35 @@
+[
+  {
+    "name": "off (control)",
+    "aucpr_mean": 0.45278670680077554,
+    "aucpr_min": 0.1761044758388275,
+    "aucpr_max": 0.5971307833464656,
+    "precision_mean": 0.6559252980911999,
+    "recall_mean": 0.37150544287082016,
+    "fp_per_1k_legit": 3.2688373428412643,
+    "merchant_fp_per_1k": 22.54230897125512,
+    "caught_at_budget": 0.5347536965853319
+  },
+  {
+    "name": "naive",
+    "aucpr_mean": 0.01299305734215768,
+    "aucpr_min": 0.006471310192067269,
+    "aucpr_max": 0.018171842482020743,
+    "precision_mean": 0,
+    "recall_mean": 0,
+    "fp_per_1k_legit": 0,
+    "merchant_fp_per_1k": 929.6729951147473,
+    "caught_at_budget": 0
+  },
+  {
+    "name": "normalised + hub-damped",
+    "aucpr_mean": 0.20102475271433665,
+    "aucpr_min": 0.022910527792703507,
+    "aucpr_max": 0.2933291646550601,
+    "precision_mean": 0.252309942653365,
+    "recall_mean": 0.14558820548389032,
+    "fp_per_1k_legit": 5.597817604294069,
+    "merchant_fp_per_1k": 0,
+    "caught_at_budget": 0.060283786256960264
+  }
+]
