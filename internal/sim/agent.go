@@ -26,6 +26,9 @@ const (
 	FraudMule
 	FraudCashout
 	FraudBot
+	// FraudScamVictim is a social-engineering victim: one large voluntary
+	// payment to a fraudster. No chain, no cycle, no repetition.
+	FraudScamVictim
 )
 
 // Label maps fraud state to the ground-truth label for transactions
@@ -40,6 +43,8 @@ func (f FraudState) Label() truth.Label {
 		return truth.LabelRingCashout
 	case FraudBot:
 		return truth.LabelBotBurst
+	case FraudScamVictim:
+		return truth.LabelScam
 	}
 	return truth.LabelNormal
 }

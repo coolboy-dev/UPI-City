@@ -55,6 +55,18 @@ func (c *Consumer) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tic
 		return append(dst, Intent{To: self.RingNext, AmountP: amt})
 	}
 
+	// A scam victim makes ONE large voluntary payment to a fraudster. No
+	// chain, no repetition, no cycle — the money simply leaves. Their balance
+	// falls after paying, so this self-limits without needing state in a
+	// phase that must stay pure.
+	if self.Fraud == FraudScamVictim && self.RingNext != 0 {
+		if self.BalanceP < 100_000 || rng.Float64() >= 0.05 {
+			return dst
+		}
+		frac := 0.35 + rng.Float64()*0.45
+		return append(dst, Intent{To: self.RingNext, AmountP: int64(float64(self.BalanceP) * frac)})
+	}
+
 	if rng.Float64() >= c.rate*w.Surge {
 		return dst
 	}

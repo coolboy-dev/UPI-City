@@ -1,0 +1,65 @@
+{
+  "observed": {
+    "average ticket size": 2477.277446020975,
+    "fraud as share of transaction COUNT": 0.018178079374871477,
+    "fraud as share of transaction VALUE": 0.014306447817098156,
+    "median ticket size": 341,
+    "person-to-merchant share of volume": 0.7613859757351429,
+    "share of payments under ₹500": 0.6274809788196587
+  },
+  "reference": [
+    {
+      "name": "average ticket size",
+      "value": 1348,
+      "unit": "₹",
+      "source": "NPCI/SBI Research, H1 2025 (Jan-Jun)",
+      "tolerance": 2
+    },
+    {
+      "name": "share of payments under ₹500",
+      "value": 0.86,
+      "unit": "fraction",
+      "source": "SBI Research, P2M transactions, Jul 2025",
+      "tolerance": 1.3
+    },
+    {
+      "name": "person-to-merchant share of volume",
+      "value": 0.63,
+      "unit": "fraction",
+      "source": "NPCI, 2025",
+      "tolerance": 1.5
+    },
+    {
+      "name": "fraud as share of transaction VALUE",
+      "value": 0.005,
+      "unit": "fraction",
+      "source": "RBI, FY2023-24 (₹1,087 cr of UPI fraud losses)",
+      "tolerance": 4
+    },
+    {
+      "name": "fraud as share of transaction COUNT",
+      "value": 0.00001,
+      "unit": "fraction",
+      "source": "RBI FY24: ~1.34M fraud cases against 131bn UPI transactions",
+      "tolerance": 10
+    }
+  ],
+  "ratio_observed_over_reference": {
+    "average ticket size": 1.8377429124784679,
+    "fraud as share of transaction COUNT": 1817.8079374871477,
+    "fraud as share of transaction VALUE": 2.861289563419631,
+    "person-to-merchant share of volume": 1.20854916783356,
+    "share of payments under ₹500": 0.7296290451391381
+  },
+  "within_tolerance": {
+    "average ticket size": true,
+    "fraud as share of transaction COUNT": false,
+    "fraud as share of transaction VALUE": true,
+    "person-to-merchant share of volume": true,
+    "share of payments under ₹500": false
+  },
+  "precision_at_simulated_prevalence": 0.6925661486770265,
+  "precision_at_real_prevalence": 0.001215263748280672,
+  "simulated_prevalence": 0.018178079374871477,
+  "real_prevalence": 0.00001
+}

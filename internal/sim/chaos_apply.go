@@ -192,6 +192,8 @@ func stateOf(r chaos.Role) FraudState {
 		return FraudCashout
 	case chaos.RoleBot:
 		return FraudBot
+	case chaos.RoleScamVictim:
+		return FraudScamVictim
 	}
 	return FraudNone
 }

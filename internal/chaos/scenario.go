@@ -23,6 +23,9 @@ const (
 	RoleMule                 // layering hop
 	RoleCashout              // terminal extraction point
 	RoleBot                  // high-frequency low-value burst
+	// RoleScamVictim is someone talked into paying a fraudster directly. One
+	// large voluntary payment, no laundering chain behind it.
+	RoleScamVictim
 )
 
 // Effect is a declarative change to the world.

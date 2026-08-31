@@ -27,6 +27,9 @@ const (
 	LabelRingCashout
 	LabelBotBurst
 	LabelStructuring
+	// LabelScam is a social-engineering payout: the victim authorised it, so
+	// no account was compromised and no chain exists to trace.
+	LabelScam
 )
 
 func (l Label) String() string {
@@ -43,6 +46,8 @@ func (l Label) String() string {
 		return "bot_burst"
 	case LabelStructuring:
 		return "structuring"
+	case LabelScam:
+		return "scam_payout"
 	}
 	return "unknown"
 }
