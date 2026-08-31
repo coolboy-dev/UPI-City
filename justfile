@@ -84,7 +84,43 @@ all:
     just compare
     just pregenerate
     just propagation
+    just validate
+    just generalise
+    just drift
+    just feedback
     just report-html
+
+# REALISM: check the simulated traffic against published NPCI/RBI figures
+validate seed="42":
+    go run ./cmd/validate -seed {{seed}} -ticks 40000
+
+# GENERALISATION: the attack the detectors were never tuned against
+#
+# Reported per-detector, because the aggregate hides the finding: the one
+# detector that looks useless on the ring is the only one above chance here.
+generalise seed="42":
+    @echo "=== scam-payout — built AFTER the detectors were frozen, never tuned against ==="
+    @for d in velocity fanout cycle velocity,fanout,cycle; do \
+        printf "  %-24s " "$d"; \
+        go run ./cmd/harness -seed {{seed}} -ticks 40000 -scenario scam-payout -detectors "$d" 2>/dev/null \
+          | grep -E "^AUC-PR|^random" | awk '{printf "%s ", $2}'; echo; \
+    done
+    @echo "  (columns: AUC-PR, then the chance floor)"
+    @echo
+    @echo "=== the ring they WERE built for, same seed ==="
+    @for d in velocity fanout cycle velocity,fanout,cycle; do \
+        printf "  %-24s " "$d"; \
+        go run ./cmd/harness -seed {{seed}} -ticks 40000 -scenario fraud-ring -detectors "$d" 2>/dev/null \
+          | grep -E "^AUC-PR|^random" | awk '{printf "%s ", $2}'; echo; \
+    done
+
+# AGEING: does the detector decay as legitimate behaviour moves?
+drift:
+    go run ./cmd/drift
+
+# FEEDBACK: what an analyst review queue can and cannot teach
+feedback:
+    go run ./cmd/feedback
 
 # ADVERSARY: let the attacker tune itself against a fixed policy
 adversary trials="32" seeds="2":

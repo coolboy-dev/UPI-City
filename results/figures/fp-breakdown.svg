@@ -4,23 +4,23 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 @media (prefers-color-scheme:dark){svg{--bg:#111;--fg:#e8e8e8;--muted:#999;--grid:#2a2a2a;--axis:#444}}
 </style>
 <rect width="680" height="264" fill="var(--bg)"/>
-<text x="130" y="26" font-size="14" font-weight="600" fill="var(--fg)">False positives per 1,000 legitimate transactions (tau=0.27)</text>
+<text x="130" y="26" font-size="14" font-weight="600" fill="var(--fg)">False positives per 1,000 legitimate transactions (tau=0.20)</text>
 <rect x="130" y="50.65" width="526.00" height="18.37" fill="#dc2626" rx="2"/>
-<text x="122" y="63.83" font-size="11" text-anchor="end" fill="var(--fg)">mega_merchant *</text>
-<text x="662.00" y="63.83" font-size="11" fill="var(--muted)">28.5  (712 of 24952)</text>
-<rect x="130" y="82.32" width="21.55" height="18.37" fill="#64748b" rx="2"/>
-<text x="122" y="95.50" font-size="11" text-anchor="end" fill="var(--fg)">bot</text>
-<text x="157.55" y="95.50" font-size="11" fill="var(--muted)">1.2  (6 of 5132)</text>
-<rect x="130" y="113.98" width="19.65" height="18.37" fill="#64748b" rx="2"/>
-<text x="122" y="127.17" font-size="11" text-anchor="end" fill="var(--fg)">consumer</text>
-<text x="155.65" y="127.17" font-size="11" fill="var(--muted)">1.1  (192 of 180158)</text>
-<rect x="130" y="145.65" width="2.45" height="18.37" fill="#64748b" rx="2"/>
-<text x="122" y="158.83" font-size="11" text-anchor="end" fill="var(--fg)">mule</text>
-<text x="138.45" y="158.83" font-size="11" fill="var(--muted)">0.1  (2 of 15066)</text>
-<rect x="130" y="177.32" width="0.00" height="18.37" fill="#dc2626" rx="2"/>
-<text x="122" y="190.50" font-size="11" text-anchor="end" fill="var(--fg)">payroll *</text>
-<text x="136.00" y="190.50" font-size="11" fill="var(--muted)">0.0  (0 of 1867)</text>
+<text x="122" y="63.83" font-size="11" text-anchor="end" fill="var(--fg)">payroll *</text>
+<text x="662.00" y="63.83" font-size="11" fill="var(--muted)">79.7  (149 of 1870)</text>
+<rect x="130" y="82.32" width="440.03" height="18.37" fill="#dc2626" rx="2"/>
+<text x="122" y="95.50" font-size="11" text-anchor="end" fill="var(--fg)">mega_merchant *</text>
+<text x="576.03" y="95.50" font-size="11" fill="var(--muted)">66.7  (1656 of 24844)</text>
+<rect x="130" y="113.98" width="56.55" height="18.37" fill="#64748b" rx="2"/>
+<text x="122" y="127.17" font-size="11" text-anchor="end" fill="var(--fg)">bot</text>
+<text x="192.55" y="127.17" font-size="11" fill="var(--muted)">8.6  (44 of 5136)</text>
+<rect x="130" y="145.65" width="30.06" height="18.37" fill="#64748b" rx="2"/>
+<text x="122" y="158.83" font-size="11" text-anchor="end" fill="var(--fg)">consumer</text>
+<text x="166.06" y="158.83" font-size="11" fill="var(--muted)">4.6  (834 of 183139)</text>
+<rect x="130" y="177.32" width="11.05" height="18.37" fill="#64748b" rx="2"/>
+<text x="122" y="190.50" font-size="11" text-anchor="end" fill="var(--fg)">mule</text>
+<text x="147.05" y="190.50" font-size="11" fill="var(--muted)">1.7  (26 of 15527)</text>
 <rect x="130" y="208.98" width="0.00" height="18.37" fill="#dc2626" rx="2"/>
 <text x="122" y="222.17" font-size="11" text-anchor="end" fill="var(--fg)">supply_pair *</text>
-<text x="136.00" y="222.17" font-size="11" fill="var(--muted)">0.0  (0 of 847)</text>
+<text x="136.00" y="222.17" font-size="11" fill="var(--muted)">0.0  (0 of 850)</text>
 </svg>

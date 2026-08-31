@@ -16,7 +16,7 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 <line x1="64" y1="116.80" x2="496" y2="116.80" stroke="var(--grid)" stroke-width="1"/>
 <text x="58" y="119.80" font-size="10" text-anchor="end" fill="var(--muted)">0.92</text>
 <line x1="64" y1="44.00" x2="496" y2="44.00" stroke="var(--grid)" stroke-width="1"/>
-<text x="58" y="47.00" font-size="10" text-anchor="end" fill="var(--muted)">1.14</text>
+<text x="58" y="47.00" font-size="10" text-anchor="end" fill="var(--muted)">1.15</text>
 <line x1="64.00" y1="44" x2="64.00" y2="408" stroke="var(--grid)" stroke-width="1"/>
 <text x="64.00" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">0</text>
 <line x1="150.40" y1="44" x2="150.40" y2="408" stroke="var(--grid)" stroke-width="1"/>
@@ -28,20 +28,20 @@ svg{--bg:#ffffff;--fg:#1a1a1a;--muted:#666;--grid:#e8e8e8;--axis:#bbb}
 <line x1="409.60" y1="44" x2="409.60" y2="408" stroke="var(--grid)" stroke-width="1"/>
 <text x="409.60" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">0.92</text>
 <line x1="496.00" y1="44" x2="496.00" y2="408" stroke="var(--grid)" stroke-width="1"/>
-<text x="496.00" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">1.14</text>
+<text x="496.00" y="424" font-size="10" text-anchor="middle" fill="var(--muted)">1.15</text>
 <rect x="64" y="44" width="432" height="364" fill="none" stroke="var(--axis)" stroke-width="1"/>
 <polyline points="64.00,408.00 496.00,44.00" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round"/>
-<polyline points="64.84,405.64 120.59,349.52 148.09,319.12 200.61,304.46 230.73,237.14 271.49,151.81 307.60,129.35 342.60,116.80 383.60,112.40 435.29,91.48" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round"/>
-<circle cx="64.84" cy="405.64" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="120.59" cy="349.52" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="148.09" cy="319.12" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="200.61" cy="304.46" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="230.73" cy="237.14" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="271.49" cy="151.81" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="307.60" cy="129.35" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="342.60" cy="116.80" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="383.60" cy="112.40" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
-<circle cx="435.29" cy="91.48" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<polyline points="64.78,405.76 120.06,351.53 150.01,321.65 200.77,294.33 239.29,214.54 265.14,145.98 302.02,129.15 352.62,114.86 386.42,104.64 434.59,91.48" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="64.78" cy="405.76" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="120.06" cy="351.53" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="150.01" cy="321.65" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="200.77" cy="294.33" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="239.29" cy="214.54" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="265.14" cy="145.98" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="302.02" cy="129.15" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="352.62" cy="114.86" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="386.42" cy="104.64" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
+<circle cx="434.59" cy="91.48" r="4.5" fill="#059669" stroke="var(--bg)" stroke-width="1.5"/>
 <line x1="346.00" y1="54.00" x2="364.00" y2="54.00" stroke="#2563eb" stroke-width="2.5"/>
 <text x="370.00" y="58.00" font-size="11" fill="var(--fg)">observed</text>
 <line x1="346.00" y1="70.00" x2="364.00" y2="70.00" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="5 4"/>

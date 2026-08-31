@@ -1,35 +1,35 @@
 [
   {
     "name": "off (control)",
-    "aucpr_mean": 0.4569191107116233,
-    "aucpr_min": 0.1761044758388275,
-    "aucpr_max": 0.6009960263396767,
-    "precision_mean": 0.6645696303364729,
-    "recall_mean": 0.3721828966629,
-    "fp_per_1k_legit": 3.1705154961352715,
-    "merchant_fp_per_1k": 22.271713978270924,
-    "caught_at_budget": 0.5327382603892911
+    "aucpr_mean": 0.4635190178072117,
+    "aucpr_min": 0.18752765111809813,
+    "aucpr_max": 0.6173167568920068,
+    "precision_mean": 0.6547938097007943,
+    "recall_mean": 0.3691100299976137,
+    "fp_per_1k_legit": 3.31196654105266,
+    "merchant_fp_per_1k": 32.03040507509866,
+    "caught_at_budget": 0.5373205025375039
   },
   {
     "name": "naive",
-    "aucpr_mean": 0.013015994789665725,
-    "aucpr_min": 0.006471310192067269,
-    "aucpr_max": 0.018176590332511795,
+    "aucpr_mean": 0.013062773902256469,
+    "aucpr_min": 0.006748622785593007,
+    "aucpr_max": 0.018962541475172144,
     "precision_mean": 0,
     "recall_mean": 0,
     "fp_per_1k_legit": 0,
-    "merchant_fp_per_1k": 928.8357508401846,
+    "merchant_fp_per_1k": 931.29603483851,
     "caught_at_budget": 0
   },
   {
     "name": "normalised + hub-damped",
-    "aucpr_mean": 0.21311459604075003,
-    "aucpr_min": 0.022910527792703507,
-    "aucpr_max": 0.28152819610375956,
-    "precision_mean": 0.2526095511312774,
-    "recall_mean": 0.13884859869302604,
-    "fp_per_1k_legit": 5.361059516108729,
+    "aucpr_mean": 0.21269295702557114,
+    "aucpr_min": 0.0252191592288704,
+    "aucpr_max": 0.29334824220879474,
+    "precision_mean": 0.24811764619457946,
+    "recall_mean": 0.14158296292087122,
+    "fp_per_1k_legit": 5.656235868820816,
     "merchant_fp_per_1k": 0,
-    "caught_at_budget": 0.0615071579561332
+    "caught_at_budget": 0.010373181530676788
   }
 ]

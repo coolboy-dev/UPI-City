@@ -186,21 +186,21 @@ whole sweep takes **1.0 seconds** across 28 cores.
 
 ```
                       mean       min      max
-prevalence           1.64%     1.08%    1.92%
-AUC-PR               0.471     0.176    0.608
-precision            0.691     0.357    0.912
-recall               0.407     0.204    0.525
-FP per 1k legit      3.60      0.77    10.97
-latency              18.8s      8.7s    57.9s
+prevalence           1.671%    1.126%   1.983%
+AUC-PR               0.481     0.188    0.633
+precision            0.656     0.242    0.856
+recall               0.434     0.232    0.571
+FP per 1k legit      4.881     1.325   12.013
+latency              18.6s      7.5s    57.9s
 
-baselines (AUC-PR)   random 0.016 · amount>50k 0.016 · always-flag 0.016
+baselines (AUC-PR)   random 0.017 · amount>50k 0.017 · always-flag 0.017
 incidents            10 total, 0 never detected
 negative control     10/10 seeds passed
 ```
 
-**Read the spread, not the mean.** AUC-PR 0.471 against a prevalence floor of
-0.016 is roughly 29× chance. But precision swings from 0.36 to 0.91 depending
-only on which world was simulated, so quoting the 0.91 would be a choice about
+**Read the spread, not the mean.** AUC-PR 0.481 against a prevalence floor of
+0.017 is roughly 29× chance. But precision swings from 0.24 to 0.86 depending
+only on which world was simulated, so quoting the 0.86 would be a choice about
 presentation rather than a measurement — which is why no single run is cited
 anywhere in this file.
 
@@ -237,31 +237,36 @@ demonstrates that rather than asserting it: change one thing, hold the world
 fixed by seed, report what moved. Ten seeds, same traffic for every row.
 
 ```
-                                                  ─── at a 1% review budget ───
-configuration                    AUC-PR      precision   recall   FP/1k legit
-─────────────────────────────────────────────────────────────────────────────
-velocity only                     0.045          0.161    0.087          7.20
-fanout only                       0.016          0.000    0.000          0.51
-cycle only                        0.047          0.706    0.036          0.17
-all three, max-wins               0.046          0.166    0.104          8.28
-all three, weighted               0.053          0.207    0.091          5.61
-all three, weighted + calibrated  0.053          0.201    0.094          6.00
+                                                       ─── at a 1% review budget ───
+configuration                          AUC-PR    precision  recall  FP/1k  latency  missed
+──────────────────────────────────────────────────────────────────────────────────────────
+  velocity only              0.452 (0.374-0.586)      0.644   0.345   3.34    18.9s       0
+  fanout only                0.017 (0.015-0.019)      0.000   0.000   0.76     0.8s       0
+  cycle only                 0.276 (0.179-0.395)      0.946   0.267   0.24    53.6s       0
+  all three, max-wins        0.452 (0.378-0.590)      0.613   0.342   3.80    18.9s       0
+★ all three, weighted        0.522 (0.444-0.633)      0.715   0.393   2.77    22.5s       0
+  all three, weighted+calib  0.522 (0.444-0.630)      0.712   0.394   2.81    22.6s       0
 ```
 
 Three things this table says that could not otherwise be known:
 
-**Weighted fusion beats loudest-wins on every axis** — AUC-PR 0.053 vs 0.046,
-precision 0.207 vs 0.166, and 32% fewer false positives. Max-wins lets the
+**Weighted fusion beats loudest-wins on every axis** — AUC-PR 0.522 vs 0.452,
+precision 0.715 vs 0.613, and 27% fewer false positives. Max-wins lets the
 noisiest detector decide the answer; a weighted sum requires signals to
 *agree*, which is what corroboration means.
 
-**`fanout` currently earns nothing.** AUC-PR 0.016 is exactly the prevalence
-floor. It stays in the table because deleting an underperforming component and
-not mentioning it is how benchmarks become dishonest.
+**`fanout` earns nothing here.** AUC-PR 0.017 is exactly the prevalence floor,
+and it stays in the table because deleting an underperforming component and not
+mentioning it is how benchmarks become dishonest. That decision turned out to
+matter more than expected: on the attack these detectors were *not* built for,
+fanout is the only one of the three above chance. A component that looks like
+dead weight on your benchmark can be the only thing carrying you on traffic
+your benchmark does not contain — see the generalisation section below.
 
-**`cycle` is a high-precision, low-recall instrument** — 0.706 precision at
-0.036 recall. It rarely fires, and is usually right when it does. That
-profile is invisible in any single aggregate number.
+**`cycle` is a high-precision, low-recall instrument** — 0.946 precision at
+0.267 recall, and by far the slowest at 53.6s. It rarely fires, is almost
+always right when it does, and takes its time. That profile is invisible in any
+single aggregate number.
 
 ### Calibration
 
@@ -492,15 +497,186 @@ that finds one incident in ten, quickly, and reports "median latency 3.1s" is
 describing its successes and calling it performance. `NeverDetected` is a
 first-class field and appears in every summary, currently at 0/10.
 
-**False positive rate.** At 1.6% prevalence, true negatives dominate so
+**False positive rate.** At 1.7% prevalence, true negatives dominate so
 completely that FPR sits near 0.003 no matter how bad the detector is.
 Reported instead as **false positives per 1,000 legitimate transactions** —
-14.8 — because that is the number a risk team actually budgets against.
+4.9 — because that is the number a risk team actually budgets against.
 
 Failures are bank-side only (~0.6%). Declines are zero and the economy is
 flow-balanced over 100k ticks, checked with `just diag`, because an agent
 economy that quietly goes insolvent still produces plausible-looking traffic
 and every metric over a long run would then be measuring insolvency.
+
+### Is the simulated traffic anything like real UPI?
+
+Every number above is conditional on the traffic being realistic, and for most
+of this project that was asserted rather than shown. `just validate` compares
+the simulator against figures published by NPCI, SBI Research and the RBI.
+
+```
+statistic                                 simulated    published    ratio
+average ticket size                            2016         1348      1.5x  ok
+share of P2M payments under ₹500           86.3460%     86.0000%      1.0x  ok
+person-to-merchant share of volume         84.4726%     63.0000%      1.3x  ok
+fraud as share of transaction VALUE         1.8136%      0.5000%      3.6x  ok
+fraud as share of transaction COUNT         1.8231%      0.0010%   1823.1x  OFF
+```
+
+The amount distribution is **fitted**, not tuned by hand until it looked right.
+The two published figures cover different populations, which is the whole
+subtlety: the 86%-under-₹500 figure is person-to-merchant only, while the
+₹1,348 average ticket is all UPI including large transfers. Solving
+
+```
+Φ( ln(500/m) / 1.1 ) = 0.86   →   m = 500·e^(−1.188) ≈ ₹152
+```
+
+gives a consumer median of ₹150, which independently agrees with reported real
+P2M medians — so the fit is not merely a curve dragged onto a target. The
+simulator then produced 86.35% against a published 86.00%.
+
+![amount distribution](results/figures/amount-distribution.svg)
+
+The last row is deliberate and stays flagged. Real UPI fraud is ~0.001% of
+transactions by count; simulating at that rate would need ~100 million
+transactions to observe a thousand fraud cases. The elevated rate is a
+necessary compromise, and the cost of it is stated rather than hidden:
+
+```
+precision at simulated prevalence   0.718
+precision at REAL prevalence        0.0012
+```
+
+Holding the detector's true and false positive rates fixed and moving *only*
+the base rate, precision falls by ~580×. That is not a flaw in the detector —
+it is what rarity does to precision, and it applies to every fraud system ever
+built. A precision figure quoted without its base rate is close to meaningless.
+
+The value/count mismatch in the table is also diagnostic rather than cosmetic.
+Fraud here is 3.6× the published share of transaction **value** but 1823× the
+share of **count**, which says real UPI fraud is a few large payments while
+this simulator produces many small ones. Real UPI fraud is dominated by scams,
+not laundering — which is what motivated the next section.
+
+### Does it catch an attack it was never built for?
+
+Mostly no, and this is the most useful result in the project.
+
+`scam-payout` is a social-engineering scenario: victims are talked into paying
+a fraudster directly. It was written **after** the detectors were frozen and
+nothing has ever been tuned against it. It is close to a worst case by
+construction — money moves one hop and stops, so there is no cycle; each victim
+makes one voluntary payment, so there is no velocity anomaly. The only signal
+present is fan-in on the collection account.
+
+`just generalise` runs both attacks through every detector on the same seed:
+
+| detector | ring *(built for)* | scam *(never tuned against)* |
+|---|---|---|
+| velocity | 0.402 | 0.001 |
+| cycle | 0.334 | 0.001 |
+| **fanout** | **0.018** | **0.006** |
+| all three fused | **0.489** | **0.001** |
+| *chance floor* | *0.018* | *0.001* |
+
+Read the fanout row twice. **The detector that is worthless on the attack it
+was designed for is the only one with any signal on the attack it wasn't** —
+and the fused score of all three is *worse than fanout alone*, sitting exactly
+at chance. The fusion weights were hand-set on the ring, where fanout looked
+like noise and was discounted accordingly, so the combination actively destroys
+the one component that generalises.
+
+Two things had to be fixed before that measurement meant anything, and both
+were found by looking rather than guessing.
+
+**Fanout was not miscoded — it was single-scale.** It had earned nothing all
+project at AUC-PR 0.017 and was kept visible as a failure rather than deleted.
+Measuring the fan-in profile of a scam collection account directly showed ~20
+distinct never-seen-before payers, which is exactly the shape the detector
+exists to find, spread across ~6,000 ticks:
+
+```
+span=  400   max new payers in window =  4    below minPeers=14
+span= 1000   max new payers in window =  9    below minPeers=14
+span= 4000   max new payers in window = 17    fires
+```
+
+Real signal, blind detector. A single fixed window can only see campaigns
+matching its own duration. The windows are now multi-scale (400 and 4,000), and
+the ablation says the change is free — ring AUC-PR unchanged at 0.018, and
+mega-merchant false positives unchanged at 25.30 per 1,000, because the
+novelty-ratio guard holds the line on its own without help from degree.
+
+**The scenario had a bug that made the attack unrealistically hard.** Victims
+were left recruited for the scenario's whole duration, paying with probability
+0.05 every tick and refilling from salary in between — roughly 22 transfers
+each, where the design documented one. That dropped the collection account's
+ratio of new payers to total payments to 0.34, under the 0.55 floor, so the
+attack was invisible for reasons that had nothing to do with detection.
+
+Both numbers are reported before and after in the commit history, because
+fixing a scenario while investigating why detection failed is exactly the kind
+of move that deserves a paper trail.
+
+### Does the detector age?
+
+Legitimate behaviour drifts, and `just drift` measures what that costs. The
+calibrator is fitted on the first bucket only and never refreshed, which is
+what a model deployed and left alone actually looks like.
+
+```
+drift                 legit x       ranking lift    calibration ECE
+none (control)           1.0x     6.7x → 4.1x     0.0303 → 0.0719
+1.9x over run            1.9x     6.6x → 4.9x     0.0297 → 0.0559
+3.6x over run            3.7x     6.5x → 2.9x     0.0290 → 0.1163
+13x over run            13.6x     6.4x → 2.3x     0.0329 → 0.1578
+180x over run          173.7x     6.0x → 1.7x     0.0283 → 0.2600
+```
+
+**At a realistic ~2× growth this is a null result.** The drifting arm ends at
+4.9× lift against the static control's 4.1×, with *better* calibration error.
+The per-agent EWMA baselines absorb it entirely — which is what they were
+designed to do, and the first time that has been demonstrated rather than
+claimed.
+
+Past realistic rates it breaks, and it breaks unevenly. From control to 173×,
+ranking lift falls 4.1→1.7 (2.4× worse) while calibration error rises
+0.072→0.260 (3.6× worse). **The probability attached to a score rots faster
+than the ordering does**, which is the more dangerous failure: the PR curve
+still looks healthy while the review queue quietly fills at the wrong rate.
+
+### What can an analyst review queue actually teach you?
+
+Much less than expected, and `just feedback` puts a number on it. Three
+labelling regimes over identical traffic, fusion weights refit on each, all
+scored on a later period none of them was fitted to.
+
+| labelling regime | labels | of which fraud | ring lift | scam lift |
+|---|---|---|---|---|
+| deployed, no refit | — | — | 4.3× | 1.0× |
+| **reviewed queue** | 5,115 | **5,115** | **1.0×** | 1.0× |
+| **random audit** | 5,115 | 576 | **4.6×** | 1.0× |
+| oracle, all labels | 255,787 | 28,574 | 4.6× | 1.0× |
+
+**Retraining on your own review queue does not merely underperform — it
+destroys the detector**, from 4.3× lift over chance to 1.0×, which is random.
+The cause is in the third column. At a 2% review budget against 12% prevalence,
+the top-scoring 2% of rows are *100% fraud*, so the queue returns 5,115 labels
+of which 5,115 are positive. With no negatives in the sample every weighting
+scores identically and the fit collapses to all-zero weights. A queue can
+confirm what the detector already believes; it cannot hand you a counterexample
+it never surfaced.
+
+**The same 5,115 labels spent on random audits reach 4.6×** — matching an
+oracle given all 255,787 labels, exactly, down to the same refit weights.
+Identical analyst cost. The only difference is selection.
+
+The oracle's own result goes deepest. Even with perfect labels on every ring
+transaction it sets `fanout: 0.0`, because on ring traffic fanout genuinely is
+worthless — and fanout is the only detector with signal on the untuned scam. **A
+fit on one attack type learns to throw away the component that generalises**,
+and no amount of label quality repairs it. Every regime scores 1.0× on the
+scam, including the oracle.
 
 ## What went wrong on the way here
 
@@ -586,11 +762,11 @@ have regression tests. Across ten seeds:
 
 | | before | after |
 |---|---|---|
-| AUC-PR | 0.053 | **0.471** |
-| precision | 0.146 | **0.691** |
-| recall | 0.136 | **0.407** |
-| FP per 1k legit | 13.25 | **3.60** |
-| latency | 9.9s | 18.8s |
+| AUC-PR | 0.053 | **0.481** |
+| precision | 0.146 | **0.656** |
+| recall | 0.136 | **0.434** |
+| FP per 1k legit | 13.25 | **4.88** |
+| latency | 9.9s | 18.6s |
 
 Latency got *worse*, and that is the honest trade: a more selective detector
 takes longer to cross its threshold.
@@ -720,3 +896,37 @@ These numbers measure detector performance under *this simulator's*
 assumptions. They are not a claim about real UPI traffic. What the simulator
 provides is the ability to compute precision, recall and detection latency
 **at all** — which is impossible on unlabelled production data.
+
+The traffic is now checked against published NPCI/SBI/RBI figures rather than
+assumed realistic (`just validate`), and four of five statistics sit within
+tolerance. That makes the world *calibrated*, not *real*. What remains
+genuinely open, in rough order of how much it would change the conclusions:
+
+**Absolute performance is modest.** Recall 0.434 means most fraud still gets
+through at the deployed policy. Production systems do considerably better with
+gradient-boosted trees over hundreds of features; three hand-written detectors
+over one signal each is not a competitive detector and is not presented as one.
+The contribution here is the measurement apparatus, not the model.
+
+**Fraud prevalence is ~1,800× too high.** Necessary for tractability — the real
+rate needs ~100 million transactions to yield a thousand fraud cases — but it
+means the headline precision of 0.656 would be roughly 0.0012 against real base
+rates. Stated in full in the realism section rather than buried here.
+
+**Generalisation is close to absent, and now measured.** Two fraud types exist.
+On the one the detectors were not designed against, the fused score sits
+exactly at chance. There is no card testing, no refund abuse, no synthetic
+identity, no first-party fraud. Each would likely produce the same result.
+
+**Only three detectors, and they are not independent.** Velocity and cycle both
+key off throughput, so their "agreement" in the weighted fusion is weaker
+evidence than the corroboration story implies.
+
+**The feedback loop is simulated, not built.** `just feedback` measures what a
+review queue *would* teach; no analyst verdict actually flows back into a
+running system, and the labelling accuracy is assumed perfect. Real analysts
+are wrong sometimes, and modelling that would only make the conclusions worse.
+
+**The cost model is illustrative.** Rupee figures use plausible rather than
+sourced values for review labour and the revenue cost of a false block, so the
+sensitivity sweep matters more than any single expected-loss number.
