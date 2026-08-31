@@ -1,0 +1,44 @@
+[
+  {
+    "name": "reviewed queue",
+    "rows_labelled": 5115,
+    "fraud_rows_labelled": 5115,
+    "refit_weights": {
+      "cycle": 0,
+      "fanout": 0,
+      "velocity": 0
+    },
+    "eval_aucpr": 0.12064987878313913,
+    "eval_lift_over_chance": 1,
+    "scam_aucpr": 0.0042080815144098695,
+    "scam_lift_over_chance": 1
+  },
+  {
+    "name": "random audit",
+    "rows_labelled": 5115,
+    "fraud_rows_labelled": 576,
+    "refit_weights": {
+      "cycle": 5,
+      "fanout": 0,
+      "velocity": 1
+    },
+    "eval_aucpr": 0.5513722864062581,
+    "eval_lift_over_chance": 4.570019398007988,
+    "scam_aucpr": 0.004137779966871503,
+    "scam_lift_over_chance": 0.9832936820977373
+  },
+  {
+    "name": "oracle (all labels)",
+    "rows_labelled": 255787,
+    "fraud_rows_labelled": 28574,
+    "refit_weights": {
+      "cycle": 5,
+      "fanout": 0,
+      "velocity": 1
+    },
+    "eval_aucpr": 0.5513722864062581,
+    "eval_lift_over_chance": 4.570019398007988,
+    "scam_aucpr": 0.004137779966871503,
+    "scam_lift_over_chance": 0.9832936820977373
+  }
+]
