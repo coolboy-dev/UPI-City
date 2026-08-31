@@ -136,8 +136,13 @@ type Attack struct {
 }
 
 type Snapshot struct {
-	Tick   obs.Tick
-	Surge  float64
+	Tick  obs.Tick
+	Surge float64
+	// Drift is the slow, monotonic growth in legitimate activity. Separate
+	// from Surge because they are different phenomena: Surge is a recurring
+	// confound the detector must learn to ignore, Drift is a permanent shift
+	// it must adapt to. 1.0 means no drift.
+	Drift  float64
 	Attack Attack
 
 	// Target pools, held as sorted dense slices. Never maps: Go randomises

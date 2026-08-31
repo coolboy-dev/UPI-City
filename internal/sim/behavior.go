@@ -67,7 +67,7 @@ func (c *Consumer) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tic
 		return append(dst, Intent{To: self.RingNext, AmountP: int64(float64(self.BalanceP) * frac)})
 	}
 
-	if rng.Float64() >= c.rate*w.Surge {
+	if rng.Float64() >= c.rate*w.Surge*w.Drift {
 		return dst
 	}
 	// Mostly familiar merchants, occasionally somewhere new. This is what
@@ -82,7 +82,9 @@ func (c *Consumer) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tic
 	if to == self.ID {
 		return dst
 	}
-	amt := lognormalPaise(rng, consumerMedianRupees, consumerSigma)
+	// Drift moves the amount distribution too, not only the rate. A detector
+	// whose baseline tracks rate but not amount would otherwise appear immune.
+	amt := lognormalPaise(rng, consumerMedianRupees*w.Drift, consumerSigma)
 	// A payment app shows the user their balance, so people do not attempt
 	// what they plainly cannot pay. Without this, an agent that drifts near
 	// zero retries thousands of times and single-handedly produces most of

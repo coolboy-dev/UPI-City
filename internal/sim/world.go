@@ -1,6 +1,7 @@
 package sim
 
 import (
+	"math"
 	"fmt"
 	"math/rand/v2"
 	"runtime"
@@ -345,6 +346,18 @@ func (w *World) buildBehaviors() {
 	}
 }
 
+// Drift is the slow permanent growth in legitimate activity at tick t.
+//
+// Compounding rather than linear, because population and usage growth compound
+// — and because a linear ramp is trivially subtractable in a way that flatters
+// an adaptive baseline.
+func (w *World) Drift(t obs.Tick) float64 {
+	if w.Cfg.DriftPerKTick == 0 {
+		return 1
+	}
+	return math.Pow(1+w.Cfg.DriftPerKTick, float64(t)/1000)
+}
+
 // Surge is the network-wide activity multiplier: a temporal confound that
 // lifts every agent's rate at once. A global velocity threshold fires on the
 // entire population during a surge; a per-agent baseline barely notices.
@@ -372,6 +385,7 @@ func (w *World) Step() []obs.Event {
 	t := w.Now
 	w.snap.Tick = t
 	w.snap.Surge = w.Surge(t)
+	w.snap.Drift = w.Drift(t)
 	w.snap.Attack = Attack{
 		MuleRate:         w.chaosCfg.MuleRate,
 		MuleAmountRupees: w.chaosCfg.MuleAmountRupees,

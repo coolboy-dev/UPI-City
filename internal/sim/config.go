@@ -49,6 +49,16 @@ type Config struct {
 	SurgeOffset     obs.Tick
 	SurgeMultiplier float64
 
+	// DriftPerKTick is concept drift: the fraction by which ordinary
+	// legitimate activity grows every 1,000 ticks, compounding.
+	//
+	// Real detectors decay because the world moves underneath them, not
+	// because anyone attacked. Without this the legitimate population is
+	// frozen for the whole run, which quietly makes every reported number an
+	// upper bound. Zero by default so existing results are unaffected;
+	// cmd/drift turns it on and measures what it costs.
+	DriftPerKTick float64
+
 	// Opening balances, per archetype, in paise.
 	//
 	// These are not cosmetic. The network has to stay roughly in flow
@@ -81,6 +91,7 @@ func DefaultConfig() Config {
 		SurgeDuration:    2000,
 		SurgeOffset:      12000,
 		SurgeMultiplier:  2.5,
+		DriftPerKTick:    0,
 		OpeningBalanceP:  8_000_000,     // ₹80,000
 		MerchantBalanceP: 500_000_000,   // ₹50 lakh
 		PayrollBalanceP:  8_000_000_000, // ₹8 crore — externally funded
