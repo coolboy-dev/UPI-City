@@ -11,11 +11,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/yug/upi-city/internal/chaos"
 	"github.com/yug/upi-city/internal/metrics"
 	"github.com/yug/upi-city/internal/obs"
+	"github.com/yug/upi-city/internal/plot"
 	"github.com/yug/upi-city/internal/record"
 	"github.com/yug/upi-city/internal/runner"
 	"github.com/yug/upi-city/internal/sim"
@@ -54,10 +56,9 @@ func main() {
 			merchants[res.World.Agents[i].ID] = true
 		}
 	}
-	_ = merchants
 
 	real := metrics.CheckRealism(res.Rows,
-		func(r metrics.ScoredRow) bool { return r.Archetype == truth.ArchConsumer },
+		func(r metrics.ScoredRow) bool { return merchants[r.To] },
 		rep.AtBudget1pct)
 
 	fmt.Print(report(real))
@@ -67,7 +68,17 @@ func main() {
 			fmt.Fprintln(os.Stderr, "write:", err)
 			os.Exit(1)
 		}
-		fmt.Printf("\nwrote %s/realism.json\n", *out)
+		fig := filepath.Join(*out, "figures")
+		if err := os.MkdirAll(fig, 0o755); err != nil {
+			fmt.Fprintln(os.Stderr, "mkdir:", err)
+			os.Exit(1)
+		}
+		svg := filepath.Join(fig, "amount-distribution.svg")
+		if err := os.WriteFile(svg, []byte(plot.AmountCDF(real)), 0o644); err != nil {
+			fmt.Fprintln(os.Stderr, "write:", err)
+			os.Exit(1)
+		}
+		fmt.Printf("\nwrote %s/realism.json and %s\n", *out, svg)
 	}
 }
 

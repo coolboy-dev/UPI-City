@@ -211,6 +211,7 @@ func Run(o Options) (Result, error) {
 				Tick:          e.SettleTick,
 				Intensity:     intensity,
 				From:          e.From,
+				To:            e.To,
 				AmountP:       e.AmountP,
 				Failed:        e.Status != obs.StatusSuccess,
 				Score:         score,

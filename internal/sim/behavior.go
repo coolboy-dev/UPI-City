@@ -82,7 +82,7 @@ func (c *Consumer) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tic
 	if to == self.ID {
 		return dst
 	}
-	amt := lognormalPaise(rng, 300, 1.1)
+	amt := lognormalPaise(rng, consumerMedianRupees, consumerSigma)
 	// A payment app shows the user their balance, so people do not attempt
 	// what they plainly cannot pay. Without this, an agent that drifts near
 	// zero retries thousands of times and single-handedly produces most of
@@ -137,7 +137,7 @@ func (m *MegaMerchant) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs
 	if to == self.ID {
 		return dst
 	}
-	return append(dst, Intent{To: to, AmountP: lognormalPaise(rng, 700, 1.2)})
+	return append(dst, Intent{To: to, AmountP: lognormalPaise(rng, merchantMedianRupees, merchantSigma)})
 }
 
 // PayrollDisburser pays a fixed roster of employees on a fixed cycle.

@@ -73,3 +73,43 @@ func expApprox(x float64) float64 {
 	}
 	return math.Exp(x)
 }
+
+// ---------------------------------------------------------------------------
+// Amount distribution parameters, fitted to published UPI figures
+// ---------------------------------------------------------------------------
+//
+// These were magic numbers until the simulator was checked against reality
+// (cmd/validate). They are now fitted, and the fit is shown rather than
+// asserted.
+//
+// The two published figures measure DIFFERENT populations, which is the whole
+// subtlety of the fit:
+//
+//   - "86% of payments are under ₹500"  — SBI Research, and P2M only.
+//   - "average ticket size ₹1,348"      — NPCI, and ALL UPI including P2P
+//                                         and large business transfers.
+//
+// So the consumer→merchant draw is fitted to the first, and the second is
+// allowed to fall out of the archetype mixture rather than being fitted
+// directly. Fitting one distribution to both targets at once would have
+// required a median near ₹23, which is not a payment anyone makes.
+//
+// For a lognormal with median m and shape σ,  P(X < 500) = Φ(ln(500/m)/σ).
+// Holding σ at 1.1 and solving for the published 86%:
+//
+//	ln(500/m)/1.1 = Φ⁻¹(0.86) = 1.0803   →   m = 500·e^(-1.188) ≈ ₹152
+//
+// which rounds to ₹150 — and independently agrees with reported real P2M
+// median ticket sizes, so the fit is not merely a curve dragged onto a target.
+const (
+	// consumerMedianRupees is the fitted P2M median. Was ₹300, which produced
+	// 67.9% under ₹500 against a published 86%.
+	consumerMedianRupees = 150
+	consumerSigma        = 1.1
+
+	// merchantMedianRupees covers business-to-business settlement between a
+	// merchant and its suppliers. NOT fitted to the P2M figure: these are not
+	// P2M payments and including them in that comparison would be wrong.
+	merchantMedianRupees = 700
+	merchantSigma        = 1.2
+)

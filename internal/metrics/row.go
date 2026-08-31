@@ -24,6 +24,11 @@ type ScoredRow struct {
 	TxID    obs.TxID    `json:"tx"`
 	Tick    obs.Tick    `json:"t"`
 	From    obs.AgentID `json:"f"`
+	// To is the receiver. Carried because several statistics are defined by
+	// who RECEIVES a payment, not who sends it — NPCI counts a transaction as
+	// person-to-merchant by its destination, and fan-in concentration is a
+	// property of the receiving account.
+	To      obs.AgentID `json:"to"`
 	AmountP int64       `json:"a"`
 	// Failed marks a transaction the bank did not settle. Needed to describe
 	// an infrastructure incident, where the story is failures and retries

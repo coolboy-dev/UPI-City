@@ -47,7 +47,28 @@ type ScamPayout struct {
 	activeVictims int
 	armed         bool
 	closed        bool
+
+	// releaseAt is when each recruited victim stops being one, keyed by the
+	// order they were taken in.
+	//
+	// This exists because the first implementation had none, and the bug it
+	// caused is worth recording. A victim was left recruited for the whole
+	// scenario, paying with probability 0.05 every tick and refilling from
+	// salary in between, so each one made roughly 22 transfers instead of the
+	// one the design called for. That is not what a scam looks like, and it
+	// had a specific measurable consequence: the collection account's ratio of
+	// NEW payers to total payments fell to about 0.34, under the 0.55 floor
+	// the fanout detector requires, so the attack was invisible for a reason
+	// that had nothing to do with the detector.
+	releaseAt map[obs.AgentID]obs.Tick
 }
+
+// victimWindow is how long one victim stays under the scammer's influence.
+//
+// At the consumer payment probability of 0.05 per tick this yields ~1-2
+// transfers each, which is the intended shape: a voluntary payment, or a
+// couple of them, and then the victim stops.
+const victimWindow = obs.Tick(30)
 
 func (s *ScamPayout) Name() string { return "scam-payout" }
 
@@ -71,6 +92,7 @@ func (s *ScamPayout) Arm(cfg Config, view WorldView, rng *rand.Rand) {
 	}
 	s.victims = view.Wealthy(rng, v, s.fraudsters)
 
+	s.releaseAt = make(map[obs.AgentID]obs.Tick, len(s.victims))
 	s.armed = len(s.fraudsters) > 0 && len(s.victims) > 0
 }
 
@@ -114,6 +136,21 @@ func (s *ScamPayout) Step(t obs.Tick, view WorldView) []Effect {
 		fx = append(fx, Recruit{Agents: s.fraudsters, Role: RoleCashout})
 	}
 
+	// Victims whose window has elapsed go back to being ordinary consumers.
+	// Iterated over the victim slice rather than the map so the order is
+	// fixed — ranging a map here would break determinism.
+	var done []obs.AgentID
+	for i := 0; i < s.activeVictims; i++ {
+		v := s.victims[i]
+		if rel, ok := s.releaseAt[v]; ok && t >= rel {
+			done = append(done, v)
+			delete(s.releaseAt, v)
+		}
+	}
+	if len(done) > 0 {
+		fx = append(fx, Release{Agents: done})
+	}
+
 	// Victims are taken in one at a time as the scam campaign spreads. Each
 	// is pointed at a collection account and makes a single large payment.
 	want := int(in * float64(len(s.victims)))
@@ -124,6 +161,7 @@ func (s *ScamPayout) Step(t obs.Tick, view WorldView) []Effect {
 			Role:   RoleScamVictim,
 			Next:   target,
 		})
+		s.releaseAt[s.victims[s.activeVictims]] = t + victimWindow
 		s.activeVictims++
 	}
 	return fx
