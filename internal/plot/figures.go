@@ -53,7 +53,7 @@ func PRCurve(r metrics.Report) string {
 		switch bl.Name {
 		case "random":
 			draw(bl.Ops, colRandom, "4 3")
-		case "amount>50k":
+		case "amount-rank":
 			draw(bl.Ops, colAmount, "6 3")
 		case "always-flag":
 			draw(bl.Ops, colAlways, "2 3")
@@ -66,7 +66,7 @@ func PRCurve(r metrics.Report) string {
 
 	c.Legend([]LegendEntry{
 		{Label: fmt.Sprintf("detectors (AUC %.3f)", r.AUCPR), Colour: colDetector},
-		{Label: "amount>50k", Colour: colAmount, Dash: "6 3"},
+		{Label: "amount-rank", Colour: colAmount, Dash: "6 3"},
 		{Label: "random", Colour: colRandom, Dash: "4 3"},
 		{Label: "always-flag", Colour: colAlways, Dash: "2 3"},
 	})

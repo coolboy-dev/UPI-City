@@ -359,20 +359,20 @@
       }
     },
     {
-      "name": "amount\u003e50k",
-      "why": "the obvious first rule; stateful detectors must beat it to justify themselves",
-      "aucpr": 0.01982629654255319,
+      "name": "amount-rank",
+      "why": "sort by amount alone; the top 1% here begins at ₹48197 — stateful detectors must beat this to justify themselves",
+      "aucpr": 0.07878171961375657,
       "best_f1": {
-        "tau": 0,
-        "tp": 4771,
-        "fp": 235869,
-        "fn": 0,
-        "tn": 0,
-        "precision": 0.01982629654255319,
-        "recall": 1,
-        "f1": 0.03888171271866379,
-        "fp_per_1k_legit": 1000,
-        "flag_rate": 1
+        "tau": 0.93,
+        "tp": 1852,
+        "fp": 14992,
+        "fn": 2919,
+        "tn": 220877,
+        "precision": 0.10995013061030634,
+        "recall": 0.38817857891427376,
+        "f1": 0.1713624797594263,
+        "fp_per_1k_legit": 63.56070530675926,
+        "flag_rate": 0.0699966755319149
       }
     }
   ],

@@ -1,6 +1,10 @@
 package metrics
 
-import "math/rand/v2"
+import (
+	"fmt"
+	"math/rand/v2"
+	"slices"
+)
 
 // Baseline is a trivial scorer used as a reference point.
 //
@@ -58,32 +62,63 @@ func alwaysFlagBaseline(rows Rows, taus []float64) Baseline {
 	}
 }
 
-// bigAmountBaseline is the rule a reasonable person writes first: flag large
-// payments. It is the honest bar to clear, because if four stateful detectors
-// cannot beat "amount > ₹50,000" then they are not earning their complexity.
+// bigAmountBaseline is the rule a reasonable person writes first: big payments
+// are suspicious. It is the honest bar to clear, because if three stateful
+// detectors cannot beat "sort by amount" then they are not earning their
+// complexity.
+//
+// It scores each transaction by where its amount falls in the run's OWN amount
+// distribution, so tau=0.99 is exactly "flag the largest 1%".
+//
+// ─── Why a rank and not a fixed threshold ───────────────────────────────────
+//
+// This was `amount >= ₹50,000` and that was wrong twice over.
+//
+// It looked inert. Its AUC-PR came out bit-for-bit identical to always-flag's
+// on all ten seeds, which reads like a rule that never fires. It fires 1,082
+// times in a 20k-tick run — and is wrong on every single one. Everything above
+// ₹50,000 in this simulator is payroll or supply-chain settlement; the largest
+// FRAUDULENT payment is ₹48,504 against a largest legitimate one of ₹1.77M.
+// So the rule had zero true positives at every threshold, and the only
+// operating point it retained was "flag everything". A baseline that is
+// maximally wrong and a baseline that is switched off produce the same
+// headline number, and telling them apart matters.
+//
+// It was also fragile: ₹48,504 against ₹50,000 is a 3% margin. Any nudge to
+// the fraud amount distribution moves the reported figure for reasons that
+// have nothing to do with detection.
+//
+// And a rupee-denominated constant is meaningless the moment these metrics run
+// against a dataset denominated in anything else, which the real-data path
+// does.
+//
+// Ranking fixes all three. It cannot degenerate, it cannot be a coincidence of
+// where one constant landed, and it carries across currencies unchanged.
 func bigAmountBaseline(rows Rows, taus []float64) Baseline {
-	const thresholdP = 5_000_000 // ₹50,000
+	sorted := make([]int64, len(rows))
+	for i, r := range rows {
+		sorted[i] = r.AmountP
+	}
+	slices.Sort(sorted)
+
 	cp := make(Rows, len(rows))
 	copy(cp, rows)
-	var maxAmt int64 = 1
-	for _, r := range rows {
-		if r.AmountP > maxAmt {
-			maxAmt = r.AmountP
-		}
-	}
+	n := float64(len(sorted))
 	for i := range cp {
-		if cp[i].AmountP >= thresholdP {
-			// Rank larger amounts higher so the curve has a shape rather than
-			// collapsing to a single point.
-			cp[i].Score = 0.5 + 0.5*float64(cp[i].AmountP)/float64(maxAmt)
-		} else {
-			cp[i].Score = 0
-		}
+		// Equal amounts must score equally, so rank on the count of strictly
+		// smaller amounts rather than on position in the sorted slice.
+		below, _ := slices.BinarySearch(sorted, cp[i].AmountP)
+		cp[i].Score = float64(below) / n
 	}
 	ops := Sweep(cp, taus)
+
+	// Report where the top 1% actually begins, so the rule stays legible as a
+	// threshold a person could have written even though it is scored as a rank.
+	cut := sorted[len(sorted)*99/100]
 	return Baseline{
-		Name:  "amount>50k",
-		Why:   "the obvious first rule; stateful detectors must beat it to justify themselves",
+		Name: "amount-rank",
+		Why: fmt.Sprintf("sort by amount alone; the top 1%% here begins at ₹%d — "+
+			"stateful detectors must beat this to justify themselves", cut/100),
 		AUCPR: AUCPR(ops), Best: BestF1(ops), Ops: ops,
 	}
 }

@@ -77,9 +77,21 @@ traffic, and to fit calibration on one set of seeds and report on another.
 
 **5. Trivial scorers are on every chart.** A precision/recall curve alone is
 decoration — 0.14 precision could be excellent or useless and the reader has
-no way to tell. Random, always-flag, and `amount > ₹50,000` appear on the same
-axes. The last one is not a formality: it beat the real detectors 5:1 on the
-first honest evaluation, and finding that out changed the simulator.
+no way to tell. Random, always-flag, and ranking by amount alone appear on the
+same axes. The last one is not a formality: it beat the real detectors 5:1 on
+the first honest evaluation, and finding that out changed the simulator.
+
+That baseline is a **rank**, not a threshold, and the difference turned out to
+matter. As a fixed `amount > ₹50,000` rule it reported AUC-PR 0.017 on every
+seed — bit-for-bit identical to always-flag, which reads like a rule that never
+fires. It fires 1,082 times in a 20k-tick run and is wrong on all of them:
+everything above ₹50,000 here is payroll or supply-chain settlement, and the
+largest *fraudulent* payment is ₹48,504. So the constant sat at the 99.1st
+percentile and saw only legitimate traffic, and a baseline that was maximally
+wrong became indistinguishable from one that was switched off. Ranking instead
+of thresholding reports 0.067 — four times prevalence, so amount is genuinely
+informative here — and the detectors have to clear that instead of clearing
+nothing.
 
 ## Running it
 
@@ -193,7 +205,7 @@ recall               0.434     0.232    0.571
 FP per 1k legit      4.881     1.325   12.013
 latency              18.6s      7.5s    57.9s
 
-baselines (AUC-PR)   random 0.017 · amount>50k 0.017 · always-flag 0.017
+baselines (AUC-PR)   random 0.017 · amount-rank 0.067 · always-flag 0.017
 incidents            10 total, 0 never detected
 negative control     10/10 seeds passed
 ```
@@ -715,6 +727,28 @@ amount thresholds only by making many more transactions, which is exactly what
 velocity and cycle detection exist to see. You cannot hide from both at once.**
 The same fix pushed prevalence to 13%, which is nothing like a real network, so
 the ring's rates came back down to land at 1.6%.
+
+**Then that same baseline quietly broke, and looked fine.** Later work fitted
+the amount distribution to published UPI figures, which moved the whole
+distribution down. `amount > ₹50,000` then reported AUC-PR 0.017 on all ten
+seeds — bit-for-bit equal to always-flag, and equal to prevalence. That reads
+as "the rule never fires". It fires 1,082 times per run and has **zero** true
+positives at every threshold: above ₹50,000 there is only payroll and
+supply-chain settlement, while the largest fraudulent payment is ₹48,504. A
+rule that is maximally wrong and a rule that is switched off produce the same
+AUC-PR, so the failure was invisible in the number that was supposed to expose
+it. It was also sitting on a 3% margin — ₹48,504 against ₹50,000 — so the
+figure could have flipped on an unrelated change to the fraud amounts.
+
+The baseline is now a rank over the run's own amount distribution, where
+`tau=0.99` means "the largest 1%". It cannot degenerate, it cannot hinge on
+where one constant happened to land, and it is unit-free — which the real-data
+path needs, because a rupee constant is meaningless against a dataset
+denominated in dollars. The honest number is **0.067**, four times prevalence:
+amount really does carry signal here, and the fixed threshold was concealing
+it. Two property tests pin this down — one asserts the score is invariant under
+a change of units, and it is verified against the old implementation, which
+moves by 0.0074 under the same change.
 
 **Average precision was computed by trapezoid, and returned 0.0 for a perfect
 classifier.** A binary scorer has a single operating point, so every ΔRecall is

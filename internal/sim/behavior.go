@@ -267,6 +267,11 @@ func (m *Mule) Decide(self AgentView, w *Snapshot, rng *rand.Rand, t obs.Tick, d
 		// by graph structure at all, it was being caught by being
 		// conspicuously large.
 		//
+		// That baseline is now scored as a rank over the amount distribution
+		// rather than against a fixed rupee figure — see metrics.bigAmountBaseline
+		// for why the constant form went silently blind once amounts were
+		// fitted to published UPI figures.
+		//
 		// Structuring is the launderer's real trade-off, and it is the thesis
 		// of this project: hiding from an amount threshold means making many
 		// more transactions, which is exactly what velocity and cycle
