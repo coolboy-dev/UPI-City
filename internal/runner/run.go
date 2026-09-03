@@ -109,123 +109,40 @@ func Run(o Options) (Result, error) {
 	}
 
 	res := Result{
-		Peak:          make([]float64, o.Sim.NumAgents+1),
 		Population:    w.Describe(),
 		DetectorNames: pipe.Names(),
 	}
-	res.Rows = make(metrics.Rows, 0, o.Sim.NumAgents*40)
 
-	hash := obs.NewStreamHash()
-	buf := make([]detect.Finding, 0, 16)
+	// The scoring body lives in Scorer, shared verbatim with the real-data
+	// path. Only the iteration differs: here the world is stepped tick by
+	// tick, there a file is walked.
+	sc := NewScorer(ScoreConfig{
+		Pipeline:       pipe,
+		Fusion:         fuse,
+		Calibrator:     o.Calibrator,
+		Propagator:     o.Propagator,
+		PropagateEvery: o.PropagateEvery,
+		AgentCap:       o.Sim.NumAgents + 1,
+		EventW:         evRec,
+		FindingW:       fndRec,
+		LabelW:         lblRec,
+	})
+	lb := worldLabels{w}
+
 	start := time.Now()
-
-	// Per-agent risk, carried between propagation passes.
-	agentRisk := make([]float64, o.Sim.NumAgents+1)
-	propagated := make([]float64, o.Sim.NumAgents+1)
-	propEvery := o.PropagateEvery
-	if propEvery == 0 {
-		propEvery = 100
-	}
-	var lastProp obs.Tick
-
 	for i := obs.Tick(0); i < o.Sim.Ticks; i++ {
 		for _, e := range w.Step() {
-			hash = hash.Add(e)
-			res.Events++
-			if evRec != nil {
-				if err := evRec.Write(record.RowOf(e)); err != nil {
-					return Result{}, err
-				}
+			if err := sc.Observe(e, lb); err != nil {
+				return Result{}, err
 			}
-
-			// Detection sees only the observable event.
-			buf = pipe.Observe(e, buf[:0])
-
-			// Fuse the detectors' findings into one score for this
-			// transaction, keeping each detector's contribution.
-			var bestDet string
-			var bestRaw float64
-			for _, f := range buf {
-				res.Findings++
-				if int(f.Agent) < len(res.Peak) && f.Score > res.Peak[f.Agent] {
-					res.Peak[f.Agent] = f.Score
-				}
-				if f.Score > bestRaw {
-					bestRaw, bestDet = f.Score, f.Detector
-				}
-				if fndRec != nil {
-					if err := fndRec.Write(f); err != nil {
-						return Result{}, err
-					}
-				}
-			}
-			rs := fuse.ScoreWith(buf)
-			score := rs.Raw
-
-			if o.Propagator != nil {
-				o.Propagator.Observe(e)
-				if int(e.From) < len(agentRisk) && rs.Raw > agentRisk[e.From] {
-					agentRisk[e.From] = rs.Raw
-				}
-				// The pass is periodic, not per-transaction: running a
-				// two-round graph walk on every payment would dominate the
-				// loop and buy nothing, since the graph barely moves between
-				// consecutive transactions.
-				if e.SettleTick-lastProp >= propEvery {
-					propagated = o.Propagator.Adjust(agentRisk, e.SettleTick)
-					lastProp = e.SettleTick
-				}
-				if int(e.From) < len(propagated) && propagated[e.From] > score {
-					score = propagated[e.From]
-				}
-			}
-
-			if o.Calibrator != nil {
-				score = o.Calibrator.Apply(score)
-			}
-
-			// EVERY transaction becomes a row, including the vast majority
-			// nothing flagged. Evaluating only flagged transactions would make
-			// recall unmeasurable and precision meaningless.
-			// Attack strength at the moment the payment was initiated, not
-			// when it settled — the ramp is a property of the attacker.
-			var intensity float64
-			if sc := w.Scenario(); sc != nil {
-				intensity = sc.Intensity(e.Tick)
-			}
-
-			if lblRec != nil {
-				if err := lblRec.Write(record.LabelRow{
-					TxID:      e.TxID,
-					Label:     w.Truth.Label(e.TxID),
-					Incident:  w.Truth.IncidentOf(e.TxID),
-					Archetype: w.Truth.Archetype(e.From),
-					Intensity: intensity,
-				}); err != nil {
-					return Result{}, err
-				}
-			}
-
-			res.Rows = append(res.Rows, metrics.ScoredRow{
-				TxID:          e.TxID,
-				Tick:          e.SettleTick,
-				Intensity:     intensity,
-				From:          e.From,
-				To:            e.To,
-				AmountP:       e.AmountP,
-				Failed:        e.Status != obs.StatusSuccess,
-				Score:         score,
-				Raw:           rs.Raw,
-				Detector:      bestDet,
-				Contributions: rs.Contributions,
-				Label:         w.Truth.Label(e.TxID),
-				Archetype:     w.Truth.Archetype(e.From),
-				Incident:      w.Truth.IncidentOf(e.TxID),
-			})
 		}
 	}
 
 	res.Elapsed = time.Since(start)
+	res.Rows = sc.Rows()
+	res.Peak = sc.Peak()
+	res.Events = sc.Events()
+	res.Findings = sc.Findings()
 	w.Finish()
 	res.World = w
 
@@ -249,8 +166,28 @@ func Run(o Options) (Result, error) {
 			return Result{}, err
 		}
 	}
-	res.Hash = hash
+	res.Hash = sc.Hash()
 	res.Stats = w.Stats
 	res.Incidents = w.Truth.Incidents()
 	return res, nil
+}
+
+// worldLabels adapts the simulator's ledger to the Labels interface.
+//
+// The simulator is the only source that can answer Intensity meaningfully: it
+// knows how far an injected attack had ramped at a given tick because it did
+// the ramping. External data has no equivalent and reports 0.
+type worldLabels struct{ w *sim.World }
+
+func (l worldLabels) Label(id obs.TxID) truth.Label { return l.w.Truth.Label(id) }
+
+func (l worldLabels) Incident(id obs.TxID) truth.IncidentID { return l.w.Truth.IncidentOf(id) }
+
+func (l worldLabels) Archetype(id obs.AgentID) truth.Archetype { return l.w.Truth.Archetype(id) }
+
+func (l worldLabels) Intensity(t obs.Tick) float64 {
+	if sc := l.w.Scenario(); sc != nil {
+		return sc.Intensity(t)
+	}
+	return 0
 }
