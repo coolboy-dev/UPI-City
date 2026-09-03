@@ -21,5 +21,12 @@ results/**/*.jsonl
 !results/explanations.json
 !results/figures/
 
+# External datasets. Hundreds of MB, not ours to redistribute, and fetched
+# rather than generated — so the file itself stays out of the repo and
+# data/SOURCES.md records where it came from and its checksum instead.
+data/*.csv
+data/*.parquet
+data/*.zip
+
 # Local editor/tooling state, not part of the project
 .claude/

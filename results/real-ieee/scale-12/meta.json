@@ -1,0 +1,18 @@
+{
+  "dataset": "IEEE-CIS Fraud Detection (Vesta), train_transaction.csv",
+  "detectors_omitted": [
+    "fanout",
+    "cycle"
+  ],
+  "detectors_scored": [
+    "velocity"
+  ],
+  "findings_raised": 6223,
+  "labels": "isFraud — chargebacks recorded by the processor",
+  "omitted_because": "the dataset has a payer but no payee, so there is no transaction graph",
+  "secs_per_tick": 12,
+  "sha256": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+  "source": "data/train_transaction.csv",
+  "span_days": 181.99920138888888,
+  "transactions": 590540
+}

@@ -29,7 +29,10 @@ end up reporting the one number they can see: alerts raised.
 
 A simulator makes the unmeasurable measurable. The cost is that the numbers
 describe *this simulator's assumptions* rather than real UPI traffic — which
-is stated plainly rather than glossed over.
+is stated plainly rather than glossed over, and then **measured**: the same
+detectors are run against 590,540 real labelled payments in
+[The real-data check](#the-real-data-check), where the one detector that data
+can test transfers at chance. The gap is quantified rather than caveated.
 
 ## What makes the numbers trustworthy
 
@@ -93,6 +96,103 @@ of thresholding reports 0.067 — four times prevalence, so amount is genuinely
 informative here — and the detectors have to clear that instead of clearing
 nothing.
 
+## The real-data check
+
+Everything above measures a detector against fraud this project invented. That
+is the only way to know true recall — on production traffic you never learn
+what you missed — but it is a closed loop: the fraud and the detector came out
+of the same head, so their agreement is the expected outcome rather than
+evidence of anything.
+
+`just realdata` opens the loop. It scores **590,540 real card-not-present
+payments with 20,663 processor-confirmed frauds** (IEEE-CIS / Vesta, 2019)
+through the same `runner.Scorer`, the same fusion, and the same metrics code
+that score the simulator. Provenance and SHA-256 are in `data/SOURCES.md`; the
+file itself is not committed.
+
+**Only one of three detectors can be tested.** The dataset has a payer and no
+payee — no counterparty column, and `R_emaildomain` is a recipient *domain* on
+23% of rows, not an account. Velocity baselines a payer against its own history
+and works. Fan-in is a property of the receiving account and cycles need edges,
+so both are unscorable here. Supplying a placeholder receiver would have been
+worse than omitting them: every payment would land on one account, fanout would
+report the largest mule hub ever constructed, and the number would be an
+artefact of the placeholder. No public dataset carries a real payer→payee
+payment graph with fraud labels, which is the reason this simulator exists.
+
+### The result
+
+```
+                          AUC-PR    vs prevalence
+velocity (real data)      0.0350        1.00x      ← chance
+amount-rank (real data)   0.0385        1.10x
+random                    0.0350        1.00x
+prevalence                0.0350
+```
+
+**The velocity detector transfers to real card traffic at chance.** It scores
+0.481 on the simulator and 0.035 — the base rate exactly — on real payments.
+
+That is the honest headline, and it is not a bug in the harness: transaction
+and fraud counts match the source file exactly, and `amount-rank` independently
+reports the 1.10x lift you would predict from the amount distribution (median
+fraud $75 against median legitimate $69).
+
+### Why it fails, precisely
+
+Not because it never fires. It raises 661 findings, and at the very top of its
+score range precision reaches 0.065 against a 0.035 base rate — a genuine
+1.86x lift. But recall there is 0.0075: 154 frauds out of 20,663.
+
+The detector requires 12 transactions from one payer inside its window before
+it will say anything — an activity floor that exists to stop quiet accounts
+manufacturing enormous z-scores out of two payments. In the simulator, where
+agents transact continuously, that floor costs nothing. Real cards are sparse:
+
+```
+cards with >=12 payments total                    3,813 of 13,553
+...that can reach 12 IN-WINDOW at 300s                3
+...at a 1-hour window                                50
+...at a 24-hour window                              301
+median card needs 28 DAYS to accumulate 12 payments
+```
+
+So the detector's activity floor encodes an assumption about traffic density
+that real card data violates by orders of magnitude, and the failure is silent
+— nothing errors, it simply never has enough history to speak.
+
+**This is not an artefact of the time mapping.** One tick was mapped to one
+real second, which is a choice, so `just realdata-sweep` re-runs at 12s and
+288s per tick — stretching the velocity window from 5 minutes to 24 hours and
+lifting findings from 661 to 17,810:
+
+| seconds/tick | window | findings | AUC-PR |
+|---|---|---|---|
+| 1 | 5 min | 661 | 0.0350 |
+| 12 | 1 hour | 6,223 | 0.0350 |
+| 288 | 24 hours | 17,810 | 0.0353 |
+
+Two orders of magnitude more findings moves AUC-PR by 0.0003.
+
+There is also a ceiling no time scale reaches: **64.7% of the fraud here is a
+single payment on a card with no repeat within ten minutes.** A velocity
+detector cannot see a burst that does not exist, so most of this fraud was
+never available to it.
+
+### What this does and does not establish
+
+It does not retract the simulated numbers. Recall against a known ground truth
+is a real measurement, and it remains the thing production data cannot give
+you.
+
+What it establishes is the size of the gap between the two, measured rather
+than asserted — and one specific mechanism for it. A detector tuned on a
+simulator can be **inoperative** on real traffic while every test still passes,
+because the assumption it breaks is about the shape of the traffic rather than
+about anything in the code. That is a stronger argument for reading simulator
+results carefully than any caveat paragraph, and it is not one this project
+could have made without leaving the simulator.
+
 ## Running it
 
 ```bash
@@ -114,6 +214,8 @@ just explain-debug   # show what the numeral guard rejects, and why
 just propagation     # ablation: does guilt-by-association help? (it does not)
 just adversary       # let the attacker tune itself against a fixed policy
 just scale           # 5,000-agent throughput
+just realdata        # score 590k REAL labelled payments through the same code
+just realdata-sweep  # ...at three time scales, to rule out a units artefact
 ```
 
 `results/` is committed, so `just reproduce` lets a reader verify every
@@ -878,6 +980,9 @@ internal/risk/    signal fusion + isotonic calibration; also barred from truth
 internal/metrics/ the ONLY package that sees both sides, and only after a run
 internal/plot/    dependency-free SVG figures
 internal/runner/  one shared run path, so no two commands can drift
+                  — and one shared SCORING path, so simulated and real
+                    traffic are graded by the same code rather than by
+                    two loops that agree until they quietly don't
 internal/record/  JSONL recording (enables replay and offline sweeps)
 internal/server/  live SSE stream + embedded dashboard
 cmd/harness/      one run, full report

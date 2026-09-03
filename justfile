@@ -187,3 +187,17 @@ prove-firewall:
     rm -f internal/detect/leak_probe.go
     echo "--- after removing it:"
     go test ./internal/detect/ 2>&1 | tail -1
+
+# score REAL, externally-labelled payments through the same pipeline
+# needs data/train_transaction.csv — see data/SOURCES.md for the fetch
+realdata:
+    go run ./cmd/realdata -secs-per-tick 1 -out results/real-ieee
+
+# the same real data at three time scales, to show the result is not an
+# artefact of how real seconds were mapped onto ticks
+realdata-sweep:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    go run ./cmd/realdata -secs-per-tick 1   -out results/real-ieee
+    go run ./cmd/realdata -secs-per-tick 12  -out results/real-ieee/scale-12
+    go run ./cmd/realdata -secs-per-tick 288 -out results/real-ieee/scale-288
