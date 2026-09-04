@@ -1,9 +1,26 @@
-# Build output
+# Build output.
+#
+# `go build ./cmd/X` drops a binary named X at the repository root, so every
+# command gets a line here. Listed explicitly rather than with a wildcard:
+# a bare /* rule would also swallow a source directory somebody adds later.
 /upicity
+/grade
+/harness
+/bench
+/compare
+/report
+/adversary
+/propagation
+/drift
+/feedback
+/explain
+/realdata
+/validate
 /dist
 node_modules/
 web/.next/
 web/out/
+__pycache__/
 
 # Recorded event streams are large (~12 MB of events plus ~3.5 MB of labels
 # per 20k-tick seed) and are fully regenerable from the seed — that is the
@@ -17,6 +34,11 @@ results/**/*.jsonl
 !results/**/findings.jsonl.zst
 !results/**/metrics.json
 !results/**/meta.json
+# An entrant's scores are the submission itself, and the leaderboard is the
+# result — both are small, and both are what a reader needs to check a
+# published number without re-running a model they may not be able to install.
+!results/**/scores-*.meta.json
+!results/**/leaderboard.json
 !results/sweep.json
 !results/explanations.json
 !results/figures/
@@ -28,5 +50,20 @@ data/*.csv
 data/*.parquet
 data/*.zip
 
+# Training recordings for the supervised ceiling. These exist only so the
+# ceiling can learn from a run it is not graded on; nothing in them backs a
+# published number, and their metrics would sit next to the real results
+# looking like results.
+results/difficulty-train/
+results/train-seed-07/
+
+# Presentation prep — my notes for recording the demo, not part of the project.
+# Someone reading this repository wants the code and the numbers, not a script
+# telling them where to point their finger.
+DEMO.md
+SCRIPT.md
+NARRATION.md
+
 # Local editor/tooling state, not part of the project
 .claude/
+.venv-pyod/

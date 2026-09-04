@@ -41,7 +41,7 @@ type Snapshot struct {
 
 // Tx is one settled transaction, packed as an array to keep frames small.
 //
-// Layout: [from, to, amountPaise, status, score×1000, truthLabel]
+// Layout: [from, to, amountPaise, status, score×1000, truthLabel, rival×1000]
 //
 // The truth label rides along ONLY so the interface can offer a "reveal
 // ground truth" toggle. It is attached here, after detection has already run,
@@ -49,7 +49,14 @@ type Snapshot struct {
 // two false positives and the one miss, live, is the most persuasive thing
 // this project can put on screen — but it has to be obvious that the label is
 // a display concern and not an input.
-type Tx [6]int64
+//
+// The seventh slot is a competing detector's score for the same payment,
+// computed by a program outside this repository from a file containing no
+// labels. It is zero when no challenger has been loaded. Carrying both scores
+// on one transaction is what lets the interface colour a payment by WHO caught
+// it rather than merely whether something did — the two systems are looking at
+// the identical payment at the identical moment, which is the entire claim.
+type Tx [7]int64
 
 // Flag is a scored agent: [agentID, score×1000].
 type Flag [2]int64
@@ -78,6 +85,26 @@ type Live struct {
 	// instead of implying a live network.
 	Replay   bool `json:"replay"`
 	Finished bool `json:"finished"`
+
+	// ── Head to head, when a challenger's scores have been loaded ─────────
+	//
+	// Counted server-side against the same threshold and the same ground
+	// truth, so the two detectors differ in exactly one thing: the score.
+	Rival string `json:"rival,omitempty"`
+	// RivalTau is the challenger's threshold, chosen so it flags the same
+	// SHARE of traffic this project's threshold does. Sent to the browser so
+	// the particle colours and these counters agree on who caught what.
+	RivalTau float64 `json:"rivalTau"`
+	// BothCaught, MineOnly and RivalOnly partition the flagged fraud;
+	// BothMissed is fraud neither detector reached, which is the number the
+	// head-to-head view exists to make visible.
+	BothCaught int `json:"bothCaught"`
+	MineOnly   int `json:"mineOnly"`
+	RivalOnly  int `json:"rivalOnly"`
+	BothMissed int `json:"bothMissed"`
+	// RivalFP is the challenger's false positives, so a viewer can see what
+	// its extra catches cost rather than only what they bought.
+	RivalFP int `json:"rivalFP"`
 
 	// The decision layer. Blocking and reviewing are different actions with
 	// very different costs, so they are counted separately: block precision

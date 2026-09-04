@@ -1,0 +1,5 @@
+{
+  "detector": "PyOD PCA",
+  "saw_labels": false,
+  "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen"
+}

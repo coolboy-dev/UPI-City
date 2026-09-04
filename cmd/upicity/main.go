@@ -35,6 +35,8 @@ func main() {
 	cachePath := flag.String("explanations", "results/explanations.json", "pre-generated narrative cache")
 	noLLM := flag.Bool("no-llm", false, "templates only; never contact a model")
 	replay := flag.String("replay", "", "play back a recorded run instead of simulating (e.g. results/seed-42)")
+	rival := flag.String("rival", "", "competing detector to show head to head: reads "+
+		"<replay>/scores-NAME.jsonl. Empty means none; \"auto\" takes the first found")
 	flag.Parse()
 
 	scfg.NumAgents = *agents
@@ -47,13 +49,17 @@ func main() {
 
 	var s *server.Server
 	if *replay != "" {
-		src, err := server.LoadReplay(*replay)
+		src, err := server.LoadReplayWithRival(*replay, *rival)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		s = server.NewWithSource(src, scfg, ccfg, strings.Split(*detectors, ","))
 		fmt.Printf("REPLAY of %s — identical pipeline, identical wire protocol\n", *replay)
+		if n := src.RivalName(); n != "" {
+			fmt.Printf("HEAD TO HEAD against %q — its scores were computed from\n"+
+				"events.jsonl alone, in a separate process that was never given labels.jsonl\n", n)
+		}
 	} else {
 		s = server.New(scfg, ccfg, strings.Split(*detectors, ","))
 	}

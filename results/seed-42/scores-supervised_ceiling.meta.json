@@ -1,0 +1,5 @@
+{
+  "detector": "sklearn HistGradientBoostingClassifier",
+  "saw_labels": true,
+  "note": "trained on ../results/train-seed-07 with labels, scored on ../results/seed-42 which it never saw; establishes what is achievable, not what a fair entrant achieved"
+}

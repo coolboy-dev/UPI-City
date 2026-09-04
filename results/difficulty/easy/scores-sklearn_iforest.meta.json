@@ -1,0 +1,5 @@
+{
+  "detector": "sklearn IsolationForest",
+  "saw_labels": false,
+  "note": "unsupervised; fitted on the first 20% of the stream then frozen, causal features only"
+}

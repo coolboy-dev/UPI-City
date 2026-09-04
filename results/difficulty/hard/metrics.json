@@ -1,0 +1,106 @@
+{
+  "seed": 0,
+  "ticks": 0,
+  "agents": 0,
+  "scenario": "",
+  "detectors": null,
+  "transactions": 0,
+  "fraudulent": 0,
+  "prevalence": 0,
+  "aucpr": 0,
+  "best_f1": {
+    "tau": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0,
+    "recall": 0,
+    "f1": 0,
+    "fp_per_1k_legit": 0,
+    "flag_rate": 0
+  },
+  "at_1pct_review_budget": {
+    "tau": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0,
+    "recall": 0,
+    "f1": 0,
+    "fp_per_1k_legit": 0,
+    "flag_rate": 0
+  },
+  "deployed_policy": {
+    "policy": {
+      "tau_review": 0,
+      "tau_block": 0
+    },
+    "blocked": 0,
+    "reviewed": 0,
+    "allowed": 0,
+    "fraud_blocked": 0,
+    "fraud_reviewed": 0,
+    "fraud_allowed": 0,
+    "block_precision": 0,
+    "false_block_per_1k_legit": 0,
+    "review_rate": 0,
+    "review_precision": 0,
+    "caught": 0,
+    "missed": 0
+  },
+  "deployed_policy_feasible": false,
+  "budget_curve": null,
+  "recall_by_intensity": null,
+  "detection_knee": 0,
+  "detection_knee_found": false,
+  "min_block_precision": 0,
+  "review_budget": 0,
+  "economics": {
+    "policy": {
+      "tau_review": 0,
+      "tau_block": 0
+    },
+    "cost_model": {
+      "review_rupees": 0,
+      "false_block_rupees": 0,
+      "recovery_rate": 0,
+      "review_catch_rate": 0
+    },
+    "processed_rupees": 0,
+    "fraud_rupees_total": 0,
+    "fraud_rupees_blocked": 0,
+    "fraud_rupees_reviewed": 0,
+    "fraud_rupees_allowed": 0,
+    "legit_rupees_blocked": 0,
+    "reviews": 0,
+    "false_blocks": 0,
+    "saved_rupees": 0,
+    "false_block_cost_rupees": 0,
+    "review_cost_rupees": 0,
+    "net_rupees": 0,
+    "net_rupees_per_crore_processed": 0,
+    "loss_rate_no_detector": 0,
+    "loss_rate_with_policy": 0
+  },
+  "cost_sensitivity": null,
+  "latency": {
+    "tau": 0,
+    "incidents": null,
+    "never_detected": 0,
+    "total": 0
+  },
+  "fp_by_archetype": null,
+  "baselines": null,
+  "permutation_control": {
+    "trials": 0,
+    "prevalence": 0,
+    "real_aucpr": 0,
+    "permuted_mean_aucpr": 0,
+    "permuted_max_aucpr": 0,
+    "passed": false,
+    "note": ""
+  },
+  "curve": null
+}

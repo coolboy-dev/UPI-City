@@ -83,6 +83,10 @@ func NewWithSource(src Source, cfg sim.Config, ccfg chaos.Config, detectors []st
 		narratives:  map[truth.IncidentID]explain.Explanation{},
 		narrativeAt: map[truth.IncidentID]time.Time{},
 	}
+	// Naming the challenger here is what switches the head-to-head view on.
+	// A recording with no scores-*.jsonl beside it leaves this empty and the
+	// interface shows the single-detector view unchanged.
+	s.live.Rival = src.RivalName()
 	if src.Live() {
 		s.prewarm()
 	}
@@ -233,6 +237,15 @@ func (s *Server) Run(ticksPerSecond float64, fps float64) {
 
 		s.mu.Lock()
 		paused, speed, tau, tauBlock := s.paused, s.speed, s.tau, s.tauBlock
+		// Hold the challenger to the same operational load: whatever share of
+		// traffic this project is flagging at tau, give the challenger a
+		// threshold that flags the same share. Recomputed once per frame from
+		// the run so far rather than per transaction, so the cut is stable for
+		// the whole frame and every payment in it is judged the same way.
+		if s.live.Rival != "" && s.live.Settled > 0 {
+			rate := float64(s.live.TP+s.live.FP) / float64(s.live.Settled)
+			s.live.RivalTau = s.src.RivalTauForRate(rate)
+		}
 		s.mu.Unlock()
 
 		if !paused {
@@ -255,14 +268,17 @@ func (s *Server) Run(ticksPerSecond float64, fps float64) {
 					rs := s.fuse.ScoreWith(buf)
 
 					lbl := s.src.Label(e.TxID)
+					rival := s.src.Rival(e.TxID)
 					pending = append(pending, Tx{
 						int64(e.From), int64(e.To), e.AmountP,
 						int64(e.Status), int64(rs.Raw * 1000), int64(lbl),
+						int64(rival * 1000),
 					})
 					if rs.Raw >= tau {
 						flags = append(flags, Flag{int64(e.From), int64(rs.Raw * 1000)})
 					}
 					s.score(rs.Raw, tau, tauBlock, lbl)
+					s.scoreRival(rs.Raw, rival, tau, lbl)
 					s.trackIncident(e, rs, tau, lbl)
 					sinceTx++
 				}
@@ -352,6 +368,52 @@ func pipe(p *detect.Pipeline, e obs.Event, buf []detect.Finding) []detect.Findin
 // The comparison against ground truth happens HERE, on the server, after
 // detection has already produced its answer. Nothing computed in this function
 // can reach a detector.
+// scoreRival keeps the head-to-head tally: for each payment, which of the two
+// detectors flagged it, judged against the same threshold and the same truth.
+//
+// ─── Why one threshold for both ─────────────────────────────────────────────
+//
+// Comparing detectors at thresholds chosen separately compares two policies as
+// much as two detectors, and the difference cannot be attributed. Holding tau
+// fixed makes the comparison about the scores, which is what is actually being
+// claimed on screen. It is not entirely fair to a challenger whose scores are
+// distributed differently — and that is precisely why the leaderboard reports
+// AUC-PR, which no threshold can flatter, alongside this view.
+//
+// The challenger's threshold is not tau. It is whatever score makes it flag
+// the same SHARE of traffic that tau makes this project flag, recomputed as
+// the run proceeds — see Source.RivalTauForRate for why comparing two
+// independently designed score scales at one number is meaningless.
+//
+// BothMissed is the one that matters. Fraud neither detector reached is
+// invisible in any per-detector statistic, because each one is only ever
+// measured against what IT caught.
+func (s *Server) scoreRival(mine, rival, tau float64, lbl truth.Label) {
+	if s.live.Rival == "" {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	mineHit, rivalHit := mine >= tau, rival >= s.live.RivalTau
+	if !lbl.Fraudulent() {
+		if rivalHit {
+			s.live.RivalFP++
+		}
+		return
+	}
+	switch {
+	case mineHit && rivalHit:
+		s.live.BothCaught++
+	case mineHit:
+		s.live.MineOnly++
+	case rivalHit:
+		s.live.RivalOnly++
+	default:
+		s.live.BothMissed++
+	}
+}
+
 func (s *Server) score(raw, tau, tauBlock float64, lbl truth.Label) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -462,6 +524,14 @@ func (s *Server) apply(c Command) {
 		s.live.Settled, s.live.Fraudulent = 0, 0
 		s.live.Blocked, s.live.Reviewed = 0, 0
 		s.live.FraudBlocked, s.live.FraudReviewed, s.live.FalseBlocked = 0, 0, 0
+		// The head-to-head tally is thresholded too, so it is stale for the
+		// same reason and reset for the same reason.
+		s.live.BothCaught, s.live.MineOnly = 0, 0
+		s.live.RivalOnly, s.live.BothMissed, s.live.RivalFP = 0, 0, 0
+		// The matched threshold is derived from the flag rate that was just
+		// reset, so it has to go too or the first frames after a drag would
+		// judge the challenger by the old policy's budget.
+		s.live.RivalTau = 2
 	}
 	s.mu.Unlock()
 

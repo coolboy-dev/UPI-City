@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/yug/upi-city/internal/chaos"
 	"github.com/yug/upi-city/internal/obs"
@@ -36,12 +38,37 @@ type replaySource struct {
 	labels map[obs.TxID]record.LabelRow
 	world  record.WorldFile
 
+	// rival holds a competing detector's scores, read from a scores-*.jsonl
+	// written by a program outside this repository. Empty when the recording
+	// has no challenger.
+	rival     map[obs.TxID]float64
+	rivalName string
+	// rivalSorted is every rival score in descending order, so the threshold
+	// that flags a given share of traffic is one index lookup. Computed once
+	// at load: the recording's future is already written, and a quantile over
+	// it is not a peek at anything the challenger did not already commit to.
+	rivalSorted []float64
+
 	cursor int
 	tick   obs.Tick
 }
 
-// LoadReplay reads a recorded run from a directory.
+// LoadReplay reads a recorded run from a directory, with no challenger.
+//
+// This is the demo-insurance path and it deliberately ignores any scores-*.jsonl
+// sitting beside the recording. Loading one automatically would mean a replay
+// changed appearance the moment somebody graded an entrant against it, and a
+// replay that is not visually identical to a live run is useless as a fallback.
 func LoadReplay(dir string) (Source, error) {
+	return LoadReplayWithRival(dir, "")
+}
+
+// LoadReplayWithRival reads a recording alongside a competing detector's
+// scores, for the head-to-head view.
+//
+// rival names the challenger. Empty loads none; "auto" takes the first found,
+// which is a convenience for a directory with exactly one entrant in it.
+func LoadReplayWithRival(dir, rival string) (Source, error) {
 	r := &replaySource{labels: map[obs.TxID]record.LabelRow{}}
 
 	b, err := os.ReadFile(filepath.Join(dir, "world.json"))
@@ -83,8 +110,90 @@ func LoadReplay(dir string) (Source, error) {
 	if len(r.events) == 0 {
 		return nil, errors.New("replay: recording contains no events")
 	}
+
+	// The challenger's scores load exactly the way labels do — an optional
+	// side file keyed by transaction id. That symmetry is the point: to this
+	// package a rival detector's opinion and the ground truth are both things
+	// that arrive from disk after the fact and are attached to a transaction
+	// for display, never fed back into detection.
+	if err := r.loadRival(dir, rival); err != nil {
+		return nil, err
+	}
+
 	r.tick = r.events[0].SettleTick
 	return r, nil
+}
+
+// loadRival reads scores-NAME.jsonl, or the first such file when name is empty.
+func (r *replaySource) loadRival(dir, name string) error {
+	if name == "" {
+		return nil // no challenger asked for; the head-to-head view stays hidden
+	}
+	pattern := "scores-*.jsonl"
+	if name != "auto" {
+		pattern = "scores-" + name + ".jsonl"
+	}
+	matches, err := filepath.Glob(filepath.Join(dir, pattern))
+	if err != nil {
+		return err
+	}
+	if len(matches) == 0 {
+		return fmt.Errorf("replay: no scores for rival %q in %s — "+
+			"run `just entrants` first, or see detectors/README.md", name, dir)
+	}
+	sort.Strings(matches)
+	path := matches[0]
+
+	r.rival = make(map[obs.TxID]float64, len(r.events))
+	if err := readLines(path, func(line []byte) error {
+		var row struct {
+			TxID  obs.TxID `json:"tx"`
+			Score float64  `json:"s"`
+		}
+		if err := json.Unmarshal(line, &row); err != nil {
+			return err
+		}
+		r.rival[row.TxID] = row.Score
+		return nil
+	}); err != nil {
+		return fmt.Errorf("replay: %s: %w", path, err)
+	}
+	r.rivalName = strings.TrimSuffix(
+		strings.TrimPrefix(filepath.Base(path), "scores-"), ".jsonl")
+
+	r.rivalSorted = make([]float64, 0, len(r.rival))
+	for _, s := range r.rival {
+		r.rivalSorted = append(r.rivalSorted, s)
+	}
+	sort.Sort(sort.Reverse(sort.Float64Slice(r.rivalSorted)))
+	return nil
+}
+
+func (r *replaySource) Rival(id obs.TxID) float64 { return r.rival[id] }
+func (r *replaySource) RivalName() string         { return r.rivalName }
+
+func (r *replaySource) RivalTauForRate(rate float64) float64 {
+	n := len(r.rivalSorted)
+	if n == 0 || rate <= 0 {
+		// Above every possible score, so the challenger flags nothing. This is
+		// the honest reading of a zero budget, and it is what the first frames
+		// of a run report before either detector has flagged anything.
+		return 2
+	}
+	if rate >= 1 {
+		return 0
+	}
+	k := int(float64(n) * rate)
+	if k >= n {
+		k = n - 1
+	}
+	// A score of zero means the challenger declined to speak. Handing it
+	// budget it never asked for would credit it with an arbitrary slice of the
+	// traffic it ignored, so the cut never descends past the last real score.
+	if v := r.rivalSorted[k]; v > 0 {
+		return v
+	}
+	return 1e-9
 }
 
 func readLines(path string, fn func([]byte) error) error {

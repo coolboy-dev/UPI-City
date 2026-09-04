@@ -201,3 +201,118 @@ realdata-sweep:
     go run ./cmd/realdata -secs-per-tick 1   -out results/real-ieee
     go run ./cmd/realdata -secs-per-tick 12  -out results/real-ieee/scale-12
     go run ./cmd/realdata -secs-per-tick 288 -out results/real-ieee/scale-288
+
+# ─── The testbed: grade detectors this project did not write ────────────────
+#
+# A recording is already two files — the payments, and the answers, kept
+# deliberately apart. Hand the payments to any program at all, take back a
+# score per payment, and grade it against answers it was never given.
+
+# run the reference entrants over a recording (needs the python in `nix develop`)
+#
+# train= is a SEPARATE recording, deliberately not one of the seed-NN
+# directories the benchmark writes: those hold committed 40,000-tick metrics
+# that back published numbers, and a 20,000-tick training run dropped on top of
+# one would silently replace a reported result with an unrelated one.
+entrants dir="results/seed-42" train="results/train-seed-07":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{dir}}/events.jsonl" ]; then
+      echo "no recording at {{dir}} — making one first"
+      just record
+    fi
+    if [ ! -f "{{train}}/events.jsonl" ]; then
+      echo "the ceiling needs a SECOND run to learn from — recording {{train}}"
+      go run ./cmd/harness -seed 7 -ticks {{ticks}} -scenario fraud-ring -out {{train}}
+    fi
+    cd detectors
+    # An off-the-shelf anomaly detector, unsupervised, never shown a label.
+    python3 sklearn_iforest.py --events ../{{dir}}/events.jsonl \
+      --out ../{{dir}}/scores-sklearn_iforest.jsonl
+    # The entrant that IS given the answer key — for a different run — so a
+    # low score below it reads as a finding rather than a broken harness.
+    python3 supervised_ceiling.py --train ../{{train}} --score ../{{dir}}
+
+# PyOD: six off-the-shelf anomaly detectors, entered separately
+#
+# Installed into a venv that borrows numpy/scipy/scikit-learn/numba from Nix,
+# because pip's manylinux wheels cannot find libstdc++ on NixOS and the failure
+# looks like a broken detector rather than a broken install.
+pyod dir="results/seed-42":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd detectors
+    [ -x .venv-pyod/bin/python ] || ./setup_pyod.sh
+    ./.venv-pyod/bin/python pyod_zoo.py --dir "../{{dir}}"
+
+# grade every entrant found beside a recording, on identical traffic
+grade dir="results/seed-42":
+    go run ./cmd/grade -dir {{dir}}
+
+# the whole testbed loop: record, run the entrants, publish the leaderboard
+leaderboard:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just entrants
+    just grade
+
+# WATCH TWO DETECTORS DISAGREE — same payments, same instant, same budget
+# rival="" picks the first scores-*.jsonl found in the recording.
+headtohead dir="results/seed-42" rival="sklearn_iforest" tps="300":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f "{{dir}}/scores-{{rival}}.jsonl" ]; then
+      echo "no scores for {{rival}} in {{dir}} — running the entrants first"
+      just entrants
+    fi
+    CGO_ENABLED=0 go run ./cmd/upicity -replay {{dir}} -rival {{rival}} -tps {{tps}}
+
+# ─── The difficulty dial ────────────────────────────────────────────────────
+#
+# One score cannot tell you whether a detector is good or whether the fraud was
+# easy — those are indistinguishable from a single number. Sweeping difficulty
+# turns the score into a curve, and a curve is falsifiable.
+
+# record, score and grade every entrant at each difficulty level
+difficulty root="results/difficulty" train="results/difficulty-train":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for d in easy standard hard brutal; do
+      echo "═══ $d ═══════════════════════════════════════════════════════"
+      # The graded run, and a SEPARATE run at the same difficulty for the
+      # ceiling to learn from. Same difficulty, different seed: a ceiling
+      # trained on easy fraud would not be a ceiling for hard fraud.
+      go run ./cmd/harness -seed 42 -ticks {{ticks}} -scenario fraud-ring \
+        -difficulty "$d" -out "{{root}}/$d" -metrics=false
+      go run ./cmd/harness -seed 7 -ticks {{ticks}} -scenario fraud-ring \
+        -difficulty "$d" -out "{{train}}/$d" -metrics=false
+      ( cd detectors
+        python3 sklearn_iforest.py --events "../{{root}}/$d/events.jsonl" \
+          --out "../{{root}}/$d/scores-sklearn_iforest.jsonl"
+        python3 supervised_ceiling.py --train "../{{train}}/$d" --score "../{{root}}/$d"
+        [ -x .venv-pyod/bin/python ] || ./setup_pyod.sh
+        ./.venv-pyod/bin/python pyod_zoo.py --dir "../{{root}}/$d" )
+      go run ./cmd/grade -dir "{{root}}/$d" >/dev/null
+    done
+    just difficulty-table
+
+# the cross-difficulty curve: where does each detector stop working?
+difficulty-table root="results/difficulty":
+    go run ./cmd/grade -sweep {{root}}
+
+# WHICH knob breaks the detector? one variable at a time, same seed
+difficulty-ablate seed="42":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    run(){ printf "  %-26s " "$1"; shift; \
+      go run ./cmd/harness -seed {{seed}} -ticks {{ticks}} -scenario fraud-ring "$@" 2>/dev/null \
+      | grep -E "^AUC-PR" | awk '{printf "AUC-PR %s\n", $2}'; }
+    echo "=== one knob at a time, against the standard control ==="
+    run "standard (control)"
+    run "5 hops"          -hops 5
+    run "mule rate 0.04"  -mule-rate 0.04
+    run "amount 600"      -mule-amount 600
+    run "ring size 8"     -ring-size 8
+    run "ramp 4000"       -chaos-ramp 4000
+    echo "=== all of them together ==="
+    run "hard"            -difficulty hard

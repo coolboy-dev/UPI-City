@@ -24,6 +24,12 @@ func (l *liveSource) Label(id obs.TxID) truth.Label           { return l.w.Truth
 func (l *liveSource) IncidentOf(id obs.TxID) truth.IncidentID { return l.w.Truth.IncidentOf(id) }
 func (l *liveSource) Incidents() []truth.Incident             { return l.w.Truth.Incidents() }
 
+// A live run has no challenger: an external detector scores a recording, and
+// this world's payments have not happened yet.
+func (l *liveSource) Rival(obs.TxID) float64            { return 0 }
+func (l *liveSource) RivalName() string                 { return "" }
+func (l *liveSource) RivalTauForRate(float64) float64   { return 2 }
+
 func (l *liveSource) Inject(name string, cfg chaos.Config) error {
 	s, ok := chaos.New(name)
 	if !ok {

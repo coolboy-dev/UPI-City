@@ -1,0 +1,5 @@
+{
+  "detector": "PyOD LOF",
+  "saw_labels": false,
+  "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen (fitted on 6,061 of 24,244, superlinear)"
+}

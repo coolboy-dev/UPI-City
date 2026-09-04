@@ -46,7 +46,77 @@ func main() {
 	flag.IntVar(&ccfg.RingSize, "ring-size", ccfg.RingSize, "fraud ring member count")
 	flag.IntVar(&ccfg.Victims, "victims", ccfg.Victims, "compromised accounts feeding the ring")
 	flag.Float64Var(&ccfg.OutageFailRate, "outage-fail-rate", ccfg.OutageFailRate, "peak PSP failure rate during an outage")
+
+	// ── The difficulty dial ────────────────────────────────────────────────
+	//
+	// -difficulty loads a preset; the individual knobs below still override it
+	// afterwards, so a sweep can use named levels while an experiment can move
+	// one variable at a time. See chaos.difficulties for what each knob is
+	// known to defeat.
+	difficulty := flag.String("difficulty", "",
+		"fraud difficulty preset: "+strings.Join(chaos.DifficultyNames(), ", ")+
+			" (empty keeps the standard defaults)")
+	flag.IntVar(&ccfg.Hops, "hops", ccfg.Hops,
+		"laundering chain length — beyond the cycle search depth of 4 a ring is structurally invisible")
+	flag.Float64Var(&ccfg.MuleRate, "mule-rate", ccfg.MuleRate,
+		"chance per tick an active mule forwards; lower is quieter and defeats velocity")
+	flag.Float64Var(&ccfg.MuleAmountRupees, "mule-amount", ccfg.MuleAmountRupees,
+		"median forwarded payment in rupees; smaller hides inside ordinary traffic")
+	flag.Float64Var(&ccfg.TakeoverRate, "takeover-rate", ccfg.TakeoverRate,
+		"chance per tick a compromised account pays into the ring")
 	flag.Parse()
+
+	// Applied before the individual flags are read back, so an explicit knob
+	// still wins over the preset that named it.
+	if *difficulty != "" {
+		preset, ok := chaos.Difficulty(*difficulty)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "unknown difficulty %q — have: %s\n",
+				*difficulty, strings.Join(chaos.DifficultyNames(), ", "))
+			os.Exit(2)
+		}
+		// Preserve anything the user set explicitly on the command line.
+		set := map[string]bool{}
+		flag.Visit(func(f *flag.Flag) { set[f.Name] = true })
+		merged := preset
+		if set["chaos-start"] {
+			merged.StartTick = ccfg.StartTick
+		}
+		if set["chaos-ramp"] {
+			merged.RampTicks = ccfg.RampTicks
+		}
+		if set["chaos-duration"] {
+			merged.Duration = ccfg.Duration
+		}
+		if set["ring-size"] {
+			merged.RingSize = ccfg.RingSize
+		}
+		if set["victims"] {
+			merged.Victims = ccfg.Victims
+		}
+		if set["hops"] {
+			merged.Hops = ccfg.Hops
+		}
+		if set["mule-rate"] {
+			merged.MuleRate = ccfg.MuleRate
+		}
+		if set["mule-amount"] {
+			merged.MuleAmountRupees = ccfg.MuleAmountRupees
+		}
+		if set["takeover-rate"] {
+			merged.TakeoverRate = ccfg.TakeoverRate
+		}
+		if set["outage-fail-rate"] {
+			merged.OutageFailRate = ccfg.OutageFailRate
+		}
+		ccfg = merged
+		if !*quiet {
+			fmt.Printf("difficulty %s — ring %d, %d hops, mule rate %.3f, "+
+				"median forward ₹%.0f, ramp %d ticks\n",
+				*difficulty, ccfg.RingSize, ccfg.Hops, ccfg.MuleRate,
+				ccfg.MuleAmountRupees, ccfg.RampTicks)
+		}
+	}
 
 	scfg.Seed = *seed
 	scfg.Ticks = obs.Tick(*ticks)

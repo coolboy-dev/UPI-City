@@ -1,0 +1,5 @@
+{
+  "detector": "sklearn HistGradientBoostingClassifier",
+  "saw_labels": true,
+  "note": "trained on ../results/difficulty-train/hard with labels, scored on ../results/difficulty/hard which it never saw; establishes what is achievable, not what a fair entrant achieved"
+}

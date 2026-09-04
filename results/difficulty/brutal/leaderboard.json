@@ -1,0 +1,96 @@
+{
+  "transactions": 121220,
+  "fraudulent": 827,
+  "prevalence": 0.006822306550074245,
+  "entrants": [
+    {
+      "name": "upi-city (fused)",
+      "aucpr": 0.006753284352957814,
+      "vs_chance": 0.9898828648918334,
+      "precision_at_1pct": 0.0008250825082508251,
+      "recall_at_1pct": 0.0012091898428053204,
+      "fp_per_1k_at_1pct": 10.05872434443863,
+      "saw_labels": false
+    },
+    {
+      "name": "pyod_cblof",
+      "aucpr": 0.0052587042099566704,
+      "vs_chance": 0.7708103075343985,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen"
+    },
+    {
+      "name": "pyod_hbos",
+      "aucpr": 0.004999329193251734,
+      "vs_chance": 0.7327916382176243,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen"
+    },
+    {
+      "name": "pyod_iforest",
+      "aucpr": 0.005618377360470784,
+      "vs_chance": 0.8235304759809776,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen"
+    },
+    {
+      "name": "pyod_knn",
+      "aucpr": 0.004835128666660466,
+      "vs_chance": 0.708723454622227,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen (fitted on 6,061 of 24,244, superlinear)"
+    },
+    {
+      "name": "pyod_lof",
+      "aucpr": 0.004820491780017055,
+      "vs_chance": 0.7065780091580017,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen (fitted on 6,061 of 24,244, superlinear)"
+    },
+    {
+      "name": "pyod_pca",
+      "aucpr": 0.0052952808794325965,
+      "vs_chance": 0.776171642327472,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised, PyOD defaults, causal features, fitted on the first 20% then frozen"
+    },
+    {
+      "name": "sklearn_iforest",
+      "aucpr": 0.005618377360470784,
+      "vs_chance": 0.8235304759809776,
+      "precision_at_1pct": 0,
+      "recall_at_1pct": 0,
+      "fp_per_1k_at_1pct": 10.067030475193741,
+      "saw_labels": false,
+      "note": "unsupervised; fitted on the first 20% of the stream then frozen, causal features only"
+    },
+    {
+      "name": "supervised_ceiling",
+      "aucpr": 0.8305950397480005,
+      "vs_chance": 121.74695371009992,
+      "precision_at_1pct": 0.5750825082508251,
+      "recall_at_1pct": 0.8428053204353083,
+      "fp_per_1k_at_1pct": 4.277657338881829,
+      "saw_labels": true,
+      "note": "trained on ../results/difficulty-train/brutal with labels, scored on ../results/difficulty/brutal which it never saw; establishes what is achievable, not what a fair entrant achieved"
+    }
+  ]
+}

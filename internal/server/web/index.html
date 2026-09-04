@@ -77,9 +77,17 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <canvas id="c"></canvas>
   <div id="hud"></div>
   <div id="legend">
-    <span><i class="dot" style="background:#3a4354"></i>normal</span>
-    <span><i class="dot" style="background:#fbbf24"></i>scored, below threshold</span>
-    <span><i class="dot" style="background:#f87171"></i>flagged</span>
+    <span id="soloLegend">
+      <span><i class="dot" style="background:#3a4354"></i>normal</span>
+      <span><i class="dot" style="background:#fbbf24"></i>scored, below threshold</span>
+      <span><i class="dot" style="background:#f87171"></i>flagged</span>
+    </span>
+    <span id="h2hLegend" style="display:none">
+      <span><i class="dot" style="background:#4ade80"></i>both caught</span>
+      <span><i class="dot" style="background:#fbbf24"></i>only UPI City</span>
+      <span><i class="dot" style="background:#38bdf8"></i>only the challenger</span>
+      <span><i class="dot" style="background:#ff2d55"></i><b>fraud neither caught</b></span>
+    </span>
     <span id="truthLegend" style="display:none">
       <span><i class="dot" style="background:#a78bfa"></i>actually fraud</span>
     </span>
@@ -99,6 +107,30 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="row"><span>transactions/s</span><span id="tps">0</span></div>
     <div class="row"><span>settled</span><span id="settled">0</span></div>
     <div class="row"><span>frames dropped</span><span id="dropped">0</span></div>
+  </section>
+
+  <section id="h2hSection" style="display:none">
+    <h2>Head to head <span id="rivalName" style="color:var(--muted);font-weight:400"></span></h2>
+    <div class="row"><span><i class="dot" style="background:#4ade80"></i>both caught</span>
+      <span id="hBoth">0</span></div>
+    <div class="row"><span><i class="dot" style="background:#fbbf24"></i>only UPI City</span>
+      <span id="hMine">0</span></div>
+    <div class="row"><span><i class="dot" style="background:#38bdf8"></i>only the challenger</span>
+      <span id="hRival">0</span></div>
+    <div class="row" style="border-top:1px solid #2a3040;margin-top:4px;padding-top:6px">
+      <span><i class="dot" style="background:#ff2d55"></i><b>fraud NEITHER caught</b></span>
+      <span id="hMissed" style="color:#ff2d55;font-weight:600">0</span></div>
+    <div class="row"><span>challenger false positives</span><span id="hRivalFP">0</span></div>
+    <div class="row"><span>its matched threshold</span><span id="hRivalTau">—</span></div>
+    <p class="note">The challenger scored these same payments in a separate
+      process, from a file containing no labels. It is held to the <b>same
+      review budget</b> — whatever share of traffic we flag, it may flag the
+      same share — because two independently designed score scales compared at
+      one number would show which author scaled harder, not which detector is
+      better.</p>
+    <p class="note"><b>Fraud neither caught</b> is the row no detector's own
+      scoreboard can show you: each one is only ever measured against what it
+      caught.</p>
   </section>
 
   <section>
@@ -170,7 +202,10 @@ let view = {s:1, ox:0, oy:0};
 
 const COL = {
   normal:'#3a4354', scored:'#fbbf24', flagged:'#f87171', truth:'#a78bfa',
-  node:'#4b5666', merchant:'#5b8def', payroll:'#7c6cf0', supply:'#3f9e8a'
+  node:'#4b5666', merchant:'#5b8def', payroll:'#7c6cf0', supply:'#3f9e8a',
+  // Head-to-head palette. `missed` is deliberately the loudest colour on the
+  // page: it is the only category no detector's own scoreboard will ever show.
+  both:'#4ade80', mineOnly:'#fbbf24', rivalOnly:'#38bdf8', missed:'#ff2d55'
 };
 
 // Node radius shrinks as the population grows.
@@ -251,14 +286,43 @@ function draw(){
   requestAnimationFrame(draw);
 }
 
-function colourFor(score, label){
-  if(showTruth && label>0) return COL.truth;
+// ─── Colouring a payment by WHO caught it ──────────────────────────────────
+//
+// In head-to-head mode every payment carries two independent opinions: this
+// project's fused score, and a competing detector's score computed in another
+// process from a file with no labels in it. Both are judged against the same
+// threshold and the same ground truth, so the colour encodes the only thing
+// that differs — which detector saw it.
+//
+// The category worth building the view around is `missed`. Fraud that neither
+// detector reached is invisible in every per-detector statistic, because each
+// one is only ever measured against what IT caught. Here it is a red streak
+// crossing the screen, and it is the most honest thing this interface draws.
+function colourFor(score, label, rival){
+  const fraud = label > 0;
+  if(headToHead){
+    // The challenger is judged at ITS threshold, not ours — the score that
+    // makes it flag the same share of traffic. Two independently designed
+    // score scales compared at one number would show which author scaled
+    // more aggressively, not which detector is better.
+    const mine = score >= curTau*1000, theirs = rival >= curRivalTau*1000;
+    if(fraud && !mine && !theirs) return COL.missed;   // got away from both
+    if(mine && theirs)            return COL.both;
+    if(mine)                      return COL.mineOnly;
+    if(theirs)                    return COL.rivalOnly;
+    // Unflagged legitimate traffic, which is most of it. Kept dim so the
+    // disagreements are what the eye lands on.
+    return showTruth && fraud ? COL.missed : COL.normal;
+  }
+  if(showTruth && fraud) return COL.truth;
   if(score >= curTau*1000) return COL.flagged;
   if(score > 10) return COL.scored;
   return COL.normal;
 }
 
 let curTau = 0.15;
+let curRivalTau = 2;   // above every score until the server matches the budget
+let headToHead = false;
 
 const es = new EventSource('/stream');
 es.onmessage = ev => {
@@ -269,20 +333,29 @@ es.onmessage = ev => {
     resize();
     return;
   }
+  const L = m.live;
+  // Read the challenger's matched threshold BEFORE colouring this frame's
+  // particles, or the dots would be coloured against the previous frame's
+  // budget and disagree with the counters printed beside them.
+  if(typeof L.rivalTau === 'number') curRivalTau = L.rivalTau;
+
   // Cap the particle pool: a burst must not turn into an unbounded backlog
   // that keeps rendering long after the activity is over.
   for(const t of m.tx){
     if(particles.length > 1400) break;
-    const [f,to,amt,st,score,label] = t;
+    const [f,to,amt,st,score,label,rival] = t;
+    const c = colourFor(score, label, rival||0);
     particles.push({
       f, to, t0: performance.now(), dur: 700 + Math.random()*500,
-      r: st===0 ? 1.9 : 1.3,
-      c: colourFor(score, label)
+      // Fraud nobody caught is drawn larger as well as brighter. It is rare
+      // enough at this prevalence that a dot the size of ordinary traffic
+      // simply gets lost in it.
+      r: c === COL.missed ? 3.2 : (st===0 ? 1.9 : 1.3),
+      c
     });
   }
   for(const [id] of m.flags) pulses.set(id, performance.now());
 
-  const L = m.live;
   set('tick', L.tick.toLocaleString());
   set('tps', L.tps.toFixed(0));
   set('settled', L.settled.toLocaleString());
@@ -296,6 +369,26 @@ es.onmessage = ev => {
   set('falseblock', L.falseBlocked.toLocaleString());
   set('reviewed', L.reviewed.toLocaleString());
   set('rrate', (L.reviewRate*100).toFixed(2)+'%');
+
+  // Head-to-head appears only when a challenger's scores were actually loaded.
+  // A recording with no scores-*.jsonl beside it shows the original view
+  // unchanged, rather than a panel of zeroes implying a rival that lost.
+  if(L.rival){
+    if(!headToHead){
+      headToHead = true;
+      document.getElementById('h2hSection').style.display = '';
+      document.getElementById('h2hLegend').style.display = '';
+      document.getElementById('soloLegend').style.display = 'none';
+      document.getElementById('rivalName').textContent = '— vs ' + L.rival;
+    }
+    set('hBoth', L.bothCaught.toLocaleString());
+    set('hMine', L.mineOnly.toLocaleString());
+    set('hRival', L.rivalOnly.toLocaleString());
+    set('hMissed', L.bothMissed.toLocaleString());
+    set('hRivalFP', L.rivalFP.toLocaleString());
+    set('hRivalTau', L.rivalTau > 1 ? '—' : L.rivalTau.toFixed(3));
+  }
+
   paused = L.paused;
   if(L.replay){
     document.getElementById('mode').textContent =

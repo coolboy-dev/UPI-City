@@ -116,6 +116,99 @@ func DefaultConfig() Config {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Difficulty
+// ---------------------------------------------------------------------------
+
+// Difficulty presets turn the severity surface into a dial a testbed can sweep.
+//
+// ─── Why a benchmark needs one ──────────────────────────────────────────────
+//
+// A single fraud scenario produces a single score, and a single score cannot
+// tell you whether a detector is good or whether the fraud was easy. Those are
+// indistinguishable from one number, and it is the failure mode every fraud
+// benchmark has: a detector reports 0.9 on the traffic its authors chose, and
+// nobody can say what that would become against an attacker trying harder.
+//
+// Sweeping difficulty replaces the number with a curve, and a curve is
+// falsifiable. A detector that holds up as the attack gets quieter has earned
+// something; one that collapses between two adjacent levels has told you
+// exactly which assumption it was resting on.
+//
+// ─── Each level defeats a DIFFERENT detector, by construction ───────────────
+//
+// The levels are not "more of the same". Each one turns a knob that is known
+// to attack a specific signal, so the resulting curve localises a failure
+// rather than merely recording one:
+//
+//	Hops             ⇒ defeats CYCLE. The cycle search is bounded at depth 4,
+//	                   so a chain longer than that is not scored low — it is
+//	                   structurally invisible. Measured: a 3-hop ring scores
+//	                   0.961 and a 6-hop ring scores 0.000.
+//	MuleRate         ⇒ defeats VELOCITY. The detector needs a burst that is a
+//	                   multiple of an account's own normal. A mule that
+//	                   forwards rarely never produces one.
+//	MuleAmountRupees ⇒ defeats AMOUNT ranking. Payments sized like ordinary
+//	                   traffic cannot be separated by size. This is what real
+//	                   structuring does.
+//	RingSize         ⇒ defeats FANOUT. Fan-in concentration needs enough
+//	                   distinct payers arriving at one account to look unlike
+//	                   a merchant.
+//	RampTicks        ⇒ attacks everything at once, by arriving slowly enough
+//	                   that per-agent baselines absorb the change as normal.
+//
+// So the honest claim a sweep supports is not "this detector scores X". It is
+// "this detector survives until the ring exceeds the search depth, and then it
+// does not" — which is a statement about a mechanism, and can be checked.
+var difficulties = map[string]Config{
+	// Loud and obvious: what a benchmark looks like when it wants to be passed.
+	// Large payments, frequent forwarding, a short chain and a fast ramp.
+	"easy": {
+		StartTick: 4000, RampTicks: 400, Duration: 6000,
+		RingSize: 20, Hops: 3, Victims: 20, AmountScale: 1.0,
+		MuleRate: 0.25, MuleAmountRupees: 8000, TakeoverRate: 0.20,
+		OutageFailRate: 0.40, OutageExtraMs: 2000, OutageBank: -1, BotCount: 6,
+	},
+	// The project's own default, and the setting every published number in the
+	// README was measured at.
+	"standard": {
+		StartTick: 4000, RampTicks: 2000, Duration: 6000,
+		RingSize: 12, Hops: 3, Victims: 12, AmountScale: 1.0,
+		MuleRate: 0.085, MuleAmountRupees: 1500, TakeoverRate: 0.06,
+		OutageFailRate: 0.40, OutageExtraMs: 2000, OutageBank: -1, BotCount: 6,
+	},
+	// One hop past the cycle detector's search ceiling, forwarding half as
+	// often, in payments small enough to sit inside ordinary traffic.
+	"hard": {
+		StartTick: 4000, RampTicks: 4000, Duration: 6000,
+		RingSize: 8, Hops: 5, Victims: 8, AmountScale: 1.0,
+		MuleRate: 0.04, MuleAmountRupees: 600, TakeoverRate: 0.03,
+		OutageFailRate: 0.40, OutageExtraMs: 2000, OutageBank: -1, BotCount: 6,
+	},
+	// Every knob against the defence at once. This is not a fair fight and is
+	// not meant to be: it is the floor of the curve, and a detector that still
+	// scores here has found something the others did not.
+	"brutal": {
+		StartTick: 4000, RampTicks: 6000, Duration: 6000,
+		RingSize: 6, Hops: 6, Victims: 6, AmountScale: 1.0,
+		MuleRate: 0.02, MuleAmountRupees: 300, TakeoverRate: 0.015,
+		OutageFailRate: 0.40, OutageExtraMs: 2000, OutageBank: -1, BotCount: 6,
+	},
+}
+
+// Difficulty returns a named preset.
+func Difficulty(name string) (Config, bool) {
+	c, ok := difficulties[name]
+	return c, ok
+}
+
+// DifficultyNames lists the presets from easiest to hardest.
+//
+// Deliberately ordered rather than sorted: "brutal" before "easy"
+// alphabetically would put the curve backwards in every table that ranges over
+// it, and a difficulty axis that does not increase is worse than none.
+func DifficultyNames() []string { return []string{"easy", "standard", "hard", "brutal"} }
+
 // WorldView is the read-only window a scenario gets onto the world. Keeping
 // it an interface, defined here, is what stops this package from importing
 // the engine.
