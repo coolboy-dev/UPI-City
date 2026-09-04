@@ -319,6 +319,20 @@ func checksum(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+// tightest returns the highest threshold at which the detector still flags
+// anything — the alerts it is most confident about. tau=0 is excluded because
+// flagging every transaction is not an opinion.
+func tightest(curve []metrics.Operating) (metrics.Operating, bool) {
+	var best metrics.Operating
+	var found bool
+	for _, op := range curve {
+		if op.Tau > 0 && op.TP+op.FP > 0 && (!found || op.Tau > best.Tau) {
+			best, found = op, true
+		}
+	}
+	return best, found
+}
+
 func printReport(r metrics.Report, active []string, n, findings int, spt float64, elapsed time.Duration, out string) {
 	fmt.Printf("\n═══ REAL DATA — IEEE-CIS (Vesta), %s transactions ═══════════\n\n", comma(n))
 	fmt.Printf("  detectors scored    %s\n", strings.Join(active, ", "))
@@ -338,6 +352,25 @@ func printReport(r metrics.Report, active []string, n, findings int, spt float64
 	fmt.Printf("    precision         %.4f\n", r.BestF1.Precision)
 	fmt.Printf("    recall            %.4f\n", r.BestF1.Recall)
 	fmt.Printf("    FP per 1k legit   %.2f\n", r.BestF1.FPPer1kLegit)
+
+	// AUC-PR is a ranking over the whole file, and a detector that only ever
+	// speaks about 0.1% of it can sit at chance for a reason the aggregate
+	// cannot show. What a risk team would actually receive is the set of
+	// alerts at a working threshold, so report that set directly: how many
+	// were raised, how many were fraud, and how many a coin would have found.
+	if op, ok := tightest(r.Curve); ok {
+		flagged := op.TP + op.FP
+		expected := float64(flagged) * r.Prevalence
+		lift := 0.0
+		if expected > 0 {
+			lift = float64(op.TP) / expected
+		}
+		fmt.Printf("\n  at the tightest threshold that still fires (tau=%.2f)\n", op.Tau)
+		fmt.Printf("    flagged           %s\n", comma(flagged))
+		fmt.Printf("    of which fraud    %s\n", comma(op.TP))
+		fmt.Printf("    a random %s finds %.1f\n", comma(flagged), expected)
+		fmt.Printf("    lift              %.2fx\n", lift)
+	}
 
 	fmt.Printf("\n  baselines on the SAME real transactions\n")
 	for _, b := range r.Baselines {

@@ -138,16 +138,44 @@ and fraud counts match the source file exactly, and `amount-rank` independently
 reports the 1.10x lift you would predict from the amount distribution (median
 fraud $75 against median legitimate $69).
 
+Ranked over the whole file it is at chance. At the operating point it is worse
+than that, and the next section is why.
+
 ### Why it fails, precisely
 
-Not because it never fires. It raises 661 findings, and at the very top of its
-score range precision reaches 0.065 against a 0.035 base rate — a genuine
-1.86x lift. But recall there is 0.0075: 154 frauds out of 20,663.
+Not because it never fires — because of *what it fires on*. Across every
+threshold where it flags anything at all (tau 0.01 through 0.37) it selects
+658-661 transactions, and **none of them are fraudulent**. Drawing 661 rows at
+random from this file would be expected to turn up 23; the probability of a
+random draw returning zero is `0.965^661`, about 6 in 100 billion. In the tail
+where it is most confident, the detector is not performing at chance. It is
+performing below it.
 
-The detector requires 12 transactions from one payer inside its window before
-it will say anything — an activity floor that exists to stop quiet accounts
-manufacturing enormous z-scores out of two payments. In the simulator, where
-agents transact continuously, that floor costs nothing. Real cards are sparse:
+There is a measured mechanism for that, and it is the same one that causes the
+silence. The detector requires 12 transactions from one payer inside its window
+before it will say anything — an activity floor that exists to stop quiet
+accounts manufacturing enormous z-scores out of two payments. That floor
+restricts it to busy cards, and busy cards here are *cleaner* than average:
+
+```
+card txns     rows    fraud    rate    lift
+1-1           3444      146   0.0424   1.21x
+2-3           6692      213   0.0318   0.91x
+4-7          12380      343   0.0277   0.79x
+8-11         10615      271   0.0255   0.73x
+12-23        24755      563   0.0227   0.65x   ← the band it can speak about
+24-49        35446      939   0.0265   0.76x
+50-99        36925     1081   0.0293   0.84x
+100+        460283    17107   0.0372   1.06x
+```
+
+The gate that makes the detector safe is the gate that aims it at the wrong
+population. This is a partial explanation rather than a complete one — the
+100+ band sits slightly above base rate — but the eligible middle runs 0.65x to
+0.84x, and the direction is unambiguous.
+
+The same floor is why it says so little. In the simulator, where agents
+transact continuously, twelve-in-window costs nothing. Real cards are sparse:
 
 ```
 cards with >=12 payments total                    3,813 of 13,553
@@ -173,6 +201,14 @@ lifting findings from 661 to 17,810:
 | 288 | 24 hours | 17,810 | 0.0353 |
 
 Two orders of magnitude more findings moves AUC-PR by 0.0003.
+
+Widening the window is the only setting under which the detector finds any
+fraud at all, and it is worth stating precisely because it is the strongest
+case that can be made for it. At 288s per tick its best operating point reaches
+precision 0.065 against the 0.035 base rate — a genuine 1.86x lift — but on 154
+frauds out of 20,663, a recall of 0.0075. That figure belongs to the 24-hour
+run in `results/real-ieee/scale-288/` and to no other; at the headline 1s
+mapping the count of fraud it finds is zero.
 
 There is also a ceiling no time scale reaches: **64.7% of the fraud here is a
 single payment on a card with no repeat within ten minutes.** A velocity

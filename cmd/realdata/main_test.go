@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/yug/upi-city/internal/metrics"
 	"github.com/yug/upi-city/internal/obs"
 	"github.com/yug/upi-city/internal/truth"
 )
@@ -102,6 +103,32 @@ func TestFileLabelsInventNothing(t *testing.T) {
 	}
 	if l.Intensity(1234) != 0 {
 		t.Error("external data has no attack ramp")
+	}
+}
+
+// TestTightestSkipsTheDegenerateThreshold pins the operating point the
+// real-data claim rests on.
+//
+// tau=0 flags every transaction, so it always "fires" and its precision is
+// always the base rate. Reporting it as the detector's most confident output
+// would turn the sharpest negative result in the project — the alerts it does
+// raise contain no fraud — into a restatement of prevalence.
+func TestTightestSkipsTheDegenerateThreshold(t *testing.T) {
+	curve := []metrics.Operating{
+		{Tau: 0, TP: 100, FP: 900},  // flag-everything, not an opinion
+		{Tau: 0.01, TP: 0, FP: 661}, // fires
+		{Tau: 0.37, TP: 0, FP: 658}, // fires, and is the tightest that does
+		{Tau: 0.40, TP: 0, FP: 0},   // silent
+	}
+	op, ok := tightest(curve)
+	if !ok {
+		t.Fatal("a curve with flags must yield an operating point")
+	}
+	if op.Tau != 0.37 {
+		t.Errorf("tau = %v, want 0.37 (the tightest threshold that still fires)", op.Tau)
+	}
+	if _, ok := tightest([]metrics.Operating{{Tau: 0, TP: 100, FP: 900}}); ok {
+		t.Error("a detector that only fires at tau=0 has no confident output to report")
 	}
 }
 
