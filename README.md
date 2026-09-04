@@ -1,38 +1,109 @@
 # UPI City
 
-A live simulation of a UPI-style payment network, used as a testbed to measure
-**how well fraud detection actually works** — including how often it is wrong.
+**A testbed for grading fraud detectors.** It has graded eight, including its
+own, and reports that most of them do not work.
 
-Synthetic customers, merchants and banks transact continuously. Chaos is
-injected into the running network (fraud rings, bank outages). A detection
-layer scores the live stream. Every number it produces is then checked against
-ground truth the detector was never allowed to see.
+Testing whether a fraud detector works requires knowing which payments were
+actually fraudulent. On production traffic you never learn that — you know what
+you caught and never what you missed, so precision and recall are unmeasurable
+and teams report the one number they can see: alerts raised.
 
-> **Status: complete, plus two extensions.** Days 1-10 as planned, then an
-> expected-loss model and an adaptive adversary — the two gaps that most
-> separated this from something a risk team could act on. Engine,
-> ground-truth firewall, determinism gate, two chaos scenarios, three scored
-> detectors, the metrics layer, signal fusion, isotonic calibration, the
-> detector-comparison harness, the allow/review/block decision layer, the
-> LLM audit-trail layer, replay mode, the graph-propagation ablation, a static
-> HTML report, a live dashboard and the 5,000-agent scale-up are built and
-> passing. See `DEMO.md` for the walkthrough.
+So this simulates a UPI-style payment network where the answer *is* known.
+Synthetic customers, merchants and banks transact continuously; fraud rings and
+bank outages are injected into the running network; and every score any
+detector produces is checked against ground truth it was never allowed to see.
+
+The detectors under test do not have to be ours. A recording is two files kept
+deliberately apart — the payments, and the answers — so any program in any
+language can be handed the first, return a score per payment, and be graded
+against the second. See [detectors/README.md](detectors/README.md).
+
+## What it found
+
+**Eight detectors competing, plus a ceiling that was handed the answer key and
+trivial baselines for the floor.** 123,622 payments, 4,463 fraudulent (3.61%),
+one grading path for all of them.
+
+```
+entrant                      AUC-PR   vs chance
+─────────────────────────────────────────────────
+! supervised ceiling         0.9369      26.0x     ← given the answer key
+  upi-city (fused)           0.5439      15.1x
+  amount-rank  (baseline)    0.1359       3.8x
+  PyOD HBOS                  0.1198       3.3x
+  scikit-learn IForest       0.0433       1.2x
+  PyOD IForest               0.0433       1.2x
+  PyOD CBLOF                 0.0289       0.8x
+  PyOD LOF                   0.0276       0.8x
+  PyOD PCA                   0.0274       0.8x
+  PyOD KNN                   0.0260       0.7x
+  random       (baseline)    0.0362       1.0x
+```
+
+**Six off-the-shelf anomaly detectors, and not one beats sorting payments by
+size.** Four score below chance. That is a statement about a family of tools
+rather than about one weak entrant, and it is made with six of them precisely so
+it can be — isolation depth, local density, histograms, neighbour distance,
+reconstruction error and cluster distance are six different ideas of "unusual"
+and all six fail the same way. [Why](#why-off-the-shelf-anomaly-detection-fails-here).
+
+**Then difficulty becomes a dial, and this project's own detector dies.**
+
+```
+                          easy    standard      hard     brutal
+  upi-city (fused)       12.0x       15.1x      1.0x       1.0x
+  best PyOD (HBOS)        4.2x        3.3x      1.4x       0.7x
+! ceiling  (AUC-PR)       0.950       0.937     0.871      0.831
+  prevalence              5.68%       3.61%     1.34%      0.68%
+```
+
+Not a graceful decline — a collapse to chance between two adjacent settings.
+And the row that makes it a finding rather than a shrug: the entrant holding the
+answer key still scores **0.831** at the hardest level, so the fraud is present
+and findable there. At `hard`, no competing entrant clears 1.4× chance and most
+sit below 1.1×; at `brutal` none clears 1.0×. They failed to find fraud that was
+demonstrably available, which is a much stronger claim than "they scored badly"
+and one no single-setting benchmark can make.
+[The difficulty dial](#the-difficulty-dial).
+
+**And on real money it is worse.** The same code scores 590,540 real labelled
+card payments, where the one detector that data can structurally test transfers
+at chance — and below chance where it is most confident.
+[The real-data check](#the-real-data-check).
+
+> **Status: complete.** Engine, ground-truth firewall, determinism gate, three
+> chaos scenarios, three scored detectors, the metrics layer, signal fusion,
+> isotonic calibration, the allow/review/block decision layer, the LLM
+> audit-trail layer, replay, the graph-propagation ablation, the adversarial
+> search, the external-detector interface, the difficulty sweep, a static HTML
+> report, a live dashboard and the 5,000-agent scale-up are built and passing.
 
 ---
 
 ## Why this exists
 
-Testing whether a fraud detector works requires knowing which transactions
-were actually fraudulent. On production traffic you never know that — you only
-know what you caught. So real precision and recall are unmeasurable, and teams
-end up reporting the one number they can see: alerts raised.
+A benchmark that reports one score against one attack cannot distinguish a good
+detector from an easy attack — from outside, those look identical. That is the
+hole this is built to close, and closing it takes three things a single number
+does not have:
 
-A simulator makes the unmeasurable measurable. The cost is that the numbers
-describe *this simulator's assumptions* rather than real UPI traffic — which
-is stated plainly rather than glossed over, and then **measured**: the same
-detectors are run against 590,540 real labelled payments in
-[The real-data check](#the-real-data-check), where the one detector that data
-can test transfers at chance. The gap is quantified rather than caveated.
+**A floor.** Random, always-flag and rank-by-amount are on every chart, because
+0.54 is unreadable without knowing that chance is 0.036.
+
+**A ceiling.** One entrant is deliberately given the labels. Without it, a board
+where everything sits near chance is ambiguous between "the detectors failed"
+and "there was nothing left to find", and no amount of care in the other rows
+resolves it.
+
+**A dial.** Fraud difficulty sweeps across four levels, each turning a knob
+known to defeat a specific signal, so the output is a curve rather than a point.
+
+The cost of a simulator is that the numbers describe *this simulator's
+assumptions* rather than real UPI traffic. That is stated plainly rather than
+glossed over, and then **measured**: the same detectors are run against 590,540
+real labelled payments in [The real-data check](#the-real-data-check), where the
+one detector that data can test transfers at chance. The gap is quantified
+rather than caveated.
 
 ## What makes the numbers trustworthy
 
@@ -95,6 +166,163 @@ wrong became indistinguishable from one that was switched off. Ranking instead
 of thresholding reports 0.067 — four times prevalence, so amount is genuinely
 informative here — and the detectors have to clear that instead of clearing
 nothing.
+
+## Grading detectors this project did not write
+
+`internal/detect` is barred from importing `internal/truth`, and a test walks
+the real dependency graph and fails the build on violation. That is a genuine
+guarantee covering exactly one thing: code compiled into this binary.
+
+An external detector is handed `events.jsonl` and nothing else. `labels.jsonl`
+is never passed to it and lives in a process it does not share. There is no rule
+to obey and therefore no rule to break — which is the difference between a
+project that grades itself and a bench that grades anyone.
+
+```
+events.jsonl  →  [ any detector, any language ]  →  scores.jsonl
+                                                          ↓
+labels.jsonl  ─────────────────────────────────→  just grade
+```
+
+Three fields wide: give each payment a suspicion score in `[0,1]`, name the file
+`scores-YOURNAME.jsonl`, drop it beside the recording. The full contract, the
+event schema, and the rule about adapting-versus-tuning are in
+[detectors/README.md](detectors/README.md).
+
+Every entrant is graded through `metrics.Evaluate` — the same function that
+grades this project's own detectors, which are re-scored over the recording
+rather than having their published numbers reused. If the home detector reached
+the leaderboard by a different path, any difference between it and a challenger
+would be partly an artefact of that and indistinguishable from a result. The
+re-scored figure reproduces the harness exactly: 0.5439 against 0.544.
+
+### Why off-the-shelf anomaly detection fails here
+
+The first external entrant, scikit-learn's `IsolationForest`, scored 1.2×
+chance. The cheap reading is that the entrant was weak. The interesting reading
+is that the whole family cannot work here — and those are distinguishable by
+experiment, so PyOD's zoo was run to settle it.
+
+All six fail. The best of them, HBOS at 3.3×, still loses to `amount-rank` at
+3.8×, a baseline that does nothing but sort by size.
+
+The mechanism is structural rather than a matter of tuning. Fraud here is not an
+unusual payment; it is **money moving in a circle through a chain of accounts**,
+and every individual hop is ordinary — ordinary size, ordinary timing, ordinary
+counterparty. The crime is a shape in the graph, and a detector that scores each
+row on its own features has no representation in which that shape exists.
+
+Two details keep this honest:
+
+**The features are identical across all six**, so the comparison is of models
+rather than of feature engineering. They are also deliberately ordinary — how
+big, how often, how new, how concentrated — and nothing was tuned, because a
+tuned entrant measures how long its author spent.
+
+**scikit-learn's IForest and PyOD's IForest agree to four decimal places** in
+all four difficulty columns. Two implementations, different teams, different
+code, same answer. That is the harness auditing itself, and it is the first
+thing to check when a benchmark reports that everything failed.
+
+The invitation is open: the interface is three fields wide, and a detector that
+beats 3.8× on this traffic would be a genuine result. `detectors/` holds the
+reference entrants to start from.
+
+### The ceiling, and why it is on the board
+
+`supervised_ceiling` is gradient boosting trained **with labels** — on seed 7,
+and graded on seed 42, which it never saw. The same held-out discipline the
+isotonic calibrator already uses, pointed at a different question.
+
+It is not a competitor and the leaderboard marks it `!`. It is a measuring
+stick, and it exists because trivial baselines settle only the bottom of the
+scale. Random at 0.036 proves a low score is genuinely low; it says nothing
+about whether a high score was ever available. Without the ceiling, "everything
+scored at chance" and "there was no fraud to find" are the same picture.
+
+## The difficulty dial
+
+Each level turns a knob known to defeat a specific signal, so the resulting
+curve localises a failure rather than merely recording one:
+
+| knob | what it defeats |
+|---|---|
+| `Hops` | **cycle** — the search is bounded at depth 4, so a longer chain is not scored low, it is invisible. A 3-hop ring scores 0.961; a 6-hop ring scores 0.000. |
+| `MuleRate` | **velocity** — no burst means nothing to measure against an account's own normal |
+| `MuleAmountRupees` | **amount ranking** — payments sized like ordinary traffic. This is what real structuring does. |
+| `RingSize` | **fanout** — too few distinct payers to look unlike a merchant |
+| `RampTicks` | everything, by arriving slowly enough that per-agent baselines absorb it |
+
+```
+entrant                        easy      standard          hard        brutal
+──────────────────────────────────────────────────────────────────────────────
+  upi-city (fused)     0.679 (12.0x) 0.544 (15.1x)  0.013 (1.0x)  0.007 (1.0x)
+  PyOD HBOS             0.236 (4.2x)  0.120 (3.3x)  0.019 (1.4x)  0.005 (0.7x)
+  scikit-learn IForest  0.180 (3.2x)  0.043 (1.2x)  0.014 (1.1x)  0.006 (0.8x)
+  PyOD IForest          0.180 (3.2x)  0.043 (1.2x)  0.014 (1.1x)  0.006 (0.8x)
+! supervised ceiling   0.950 (16.7x) 0.937 (26.0x) 0.871 (64.8x) 0.831 (121.7x)
+──────────────────────────────────────────────────────────────────────────────
+  prevalence (chance)          5.68%         3.61%         1.34%         0.68%
+```
+
+**Both AUC-PR and lift are shown because neither is sufficient alone.** A
+quieter attack moves less money through fewer accounts, so prevalence falls
+eightfold across the sweep and lift alone would credit a detector for the fraud
+having become rarer. The ceiling's 121.7× is exactly that artefact; its raw
+AUC-PR only drifts 0.950 → 0.831, which is the number worth quoting.
+
+### No single evasion causes the collapse
+
+`just difficulty-ablate` moves one variable at a time against the same seed:
+
+```
+standard (control)              0.544   15.1x
+  5 hops only                   0.383   13.2x
+  mule rate 0.04 only           0.217    8.3x
+  amount ₹600 only              0.604   15.5x
+  ring size 8 only              0.367   14.1x
+  ramp 4000 only                0.498   17.2x
+  ── all of them together ──    0.013    1.0x
+```
+
+Every single evasion is survivable. The worst of them costs 15.1× → 8.3×, and
+two cost nothing measurable. The combination goes to chance.
+
+That sharpens rather than contradicts this project's existing claim that
+structuring cannot defeat velocity and cycle detection simultaneously. It can —
+but not by turning one knob. An attacker has to move on several axes at once,
+and the cost of doing so is what a defender is really buying.
+
+## The head-to-head view
+
+`just headtohead` replays a recording with two detectors scoring the same
+payment at the same instant, colouring each one by **who caught it**: both, mine
+only, theirs only, or — loudest on the page — **fraud neither reached**.
+
+That last category is the one no per-detector scoreboard can show, because each
+detector is only ever measured against what it caught.
+
+The challenger is **not** judged at the same threshold. It is judged at the
+score that makes it flag the same *share* of traffic. This matters, and the
+first version got it wrong: at a shared tau of 0.15 the challenger raised
+**15,487** false positives against this project's 141 — a number that measures
+where two authors put their score scales, not which detector is better. Matched
+on flag rate, the same run reads:
+
+```
+both caught      1412        this project's FPs   145
+only upi-city     375        the challenger's     406
+only the rival    728
+NEITHER           477
+```
+
+Same analyst budget, and the question becomes the one a risk team actually asks:
+given the same amount of human attention, who finds more fraud?
+
+Rival scores are precomputed and read from disk, so no Python runs in the demo
+path — a dead model or a slow import cannot break a live demonstration, and the
+challenger's ignorance of the labels is guaranteed by it having run in a
+different process at a different time against a file that does not contain them.
 
 ## The real-data check
 
@@ -232,7 +460,19 @@ could have made without leaving the simulator.
 ## Running it
 
 ```bash
-nix develop          # Go 1.26 and just — that is the whole toolchain
+nix develop          # Go, just, and the Python the CHALLENGERS need
+
+# ── the testbed ────────────────────────────────────────────────────────────
+just record          # a run: events.jsonl and labels.jsonl, kept apart
+just entrants        # score it with scikit-learn and the supervised ceiling
+just pyod            # ...and with six off-the-shelf PyOD detectors
+just grade           # ← THE LEADERBOARD, every entrant on identical traffic
+just headtohead      # ← two detectors, same payments, coloured by who caught it
+just difficulty      # record, score and grade at all four difficulty levels
+just difficulty-table    # the credibility curve
+just difficulty-ablate   # WHICH knob breaks the detector? one at a time
+
+# ── the simulator and its own detectors ────────────────────────────────────
 just live            # ← watch the network, localhost:8080
 just test            # vet + unit tests, including the ground-truth firewall
 just gate            # the determinism gate
@@ -329,10 +569,15 @@ fields.
 and says why. A recording's future is already written; accepting an injection
 would make the panel claim something the data does not contain.
 
-## Current numbers
+## This project's own detectors, in detail
 
-10 seeds × 40,000 ticks, 300 agents, fraud ring injected at tick 4,000. The
-whole sweep takes **1.0 seconds** across 28 cores.
+Everything from here down is about the three detectors that ship with the
+testbed — the entrant named `upi-city (fused)` above. They are one competitor on
+the board rather than the point of it, and they are documented at length because
+a bench that cannot be checked against something is not a bench.
+
+10 seeds × 40,000 ticks, 300 agents, fraud ring injected at tick 4,000, at the
+`standard` difficulty. The whole sweep takes **1.0 seconds** across 28 cores.
 
 ```
                       mean       min      max
@@ -947,6 +1192,22 @@ This bug only surfaced because the attack ramps. With instant-on fraud every
 transaction sits in the top intensity bucket, the curve does not exist, and
 the failure stays hidden inside an average.
 
+**The review-budget threshold search reported a 0.937 detector as 0.000.** The
+sweep searches a fixed tau grid of 0.00, 0.01 … 1.00 for the highest-recall
+point whose flag rate fits the budget. That works for scores spread across the
+range, and breaks silently for a confident one. The supervised ceiling puts 3.3%
+of its scores above 0.99 and tops out at 0.9997: at tau=0.99 it is over budget,
+at tau=1.00 it flags nothing, and no point on the grid can express "the top 1%".
+The search returned a zero row, so a detector with AUC-PR 0.937 was reported at
+precision 0.000 — which reads as a broken detector rather than a grid too coarse
+to describe it.
+
+The fix is to select by **rank**, which is what a review budget always meant: an
+analyst team says "we can look at one percent of traffic", not "we can look at
+everything above 0.99". It was found only because the ceiling was expected to
+win and visibly did not — an entrant whose result nobody has a prediction for
+would have carried the bug into the table unnoticed.
+
 **A reasoning model spent its whole token budget thinking and returned an
 empty object.** `qwen3:1.7b` produced literally `{}` on every call, the guard
 correctly rejected all of it, and everything silently fell back to templates —
@@ -1019,14 +1280,29 @@ internal/runner/  one shared run path, so no two commands can drift
                   — and one shared SCORING path, so simulated and real
                     traffic are graded by the same code rather than by
                     two loops that agree until they quietly don't
-internal/record/  JSONL recording (enables replay and offline sweeps)
-internal/server/  live SSE stream + embedded dashboard
+internal/record/  JSONL recording — the events/labels split that makes the
+                  external-detector interface possible at all
+internal/server/  live SSE stream + embedded dashboard + head-to-head view
 cmd/harness/      one run, full report
 cmd/bench/        many seeds in parallel, with the spread
 cmd/compare/      detector configurations on identical traffic
+cmd/grade/        THE LEADERBOARD — grades any detector, in any language,
+                  from a scores file, through the same metrics path
 cmd/report/       bundles results into one self-contained HTML page
 cmd/upicity/      the live server
+detectors/        challengers, and the contract they are graded under.
+                  Deliberately outside internal/: nothing here is imported
+                  by the binary, and nothing here can see a label.
 ```
+
+**The challengers are competitors, not dependencies.** `flake.nix` carries
+scikit-learn, numba, scipy and networkx so PyOD can be run; the Go binary still
+builds with **zero external Go dependencies** and never links against any of it.
+Deleting that line would cost the project nothing but rows on the leaderboard.
+PyOD itself comes from `pip --no-deps` into a `--system-site-packages` venv,
+because pip's manylinux wheels cannot find `libstdc++` on NixOS — and a NumPy
+that fails to import looks exactly like a broken detector rather than a broken
+install.
 
 **Transport is Server-Sent Events over plain `net/http`.** The plan called for
 WebSockets; the only thing they would add here is a client→server channel, and
@@ -1105,3 +1381,25 @@ are wrong sometimes, and modelling that would only make the conclusions worse.
 **The cost model is illustrative.** Rupee figures use plausible rather than
 sourced values for review labour and the revenue cost of a false block, so the
 sensitivity sweep matters more than any single expected-loss number.
+
+**Causality in an external entrant cannot be enforced.** A challenger that
+scores payment N using payment N+1 would look excellent and mean nothing, and
+the grader would report it happily. The contract asks for causal features and
+the reference entrants compute them in a single forward pass, but nothing checks
+it. The held-out difficulty split is what makes violating it unprofitable rather
+than impossible — a real limit, stated rather than papered over.
+
+**The PyOD entrants are defaults, not best efforts.** Every model runs on
+library defaults over the same ten features, which is what makes the six
+comparable to each other but not what any of them could achieve with work. The
+claim is that the *family* has no representation for graph structure, and the
+right way to falsify it is to submit a better entrant — the interface is three
+fields wide.
+
+**Difficulty is one attacker's idea of hard.** Four levels sweeping five knobs
+of a laundering ring is a far better instrument than a single setting, but the
+knobs were chosen by the same person who wrote the detectors, which is the
+circularity the ceiling and the real-data check exist to bound rather than to
+remove. `just adversary` searches the attacker's space directly and found a
+blind spot nobody had reasoned their way to; that is the more honest generator,
+and it is not yet wired into the difficulty sweep.
