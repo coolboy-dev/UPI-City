@@ -27,7 +27,9 @@ simply not present.
 
 import json
 import math
+import platform
 from collections import defaultdict, deque
+from datetime import date
 
 
 # Matches the built-in velocity detector's window, so entrants see comparable
@@ -158,6 +160,27 @@ def write_scores(path, tx_ids, scores, zero_before=0):
             f.write(json.dumps({"tx": tx, "s": round(s, 6)}) + "\n")
 
 
+def _versions():
+    """Record which library versions produced these scores.
+
+    A published number like "PyOD KNN: 0.7x" is a claim about whatever PyOD
+    happened to be on the day it ran. Stamping the version turns that into a
+    dated fact that stays true, and tells anyone reproducing the run which
+    build to install.
+    """
+    v = {"python": platform.python_version()}
+    try:
+        import importlib.metadata as md
+    except ImportError:
+        return v
+    for pkg in ("pyod", "scikit-learn", "numpy", "scipy"):
+        try:
+            v[pkg] = md.version(pkg)
+        except Exception:
+            pass
+    return v
+
+
 def write_meta(score_path, detector, saw_labels=False, note=""):
     """Declare what this entrant is, beside its scores.
 
@@ -165,7 +188,13 @@ def write_meta(score_path, detector, saw_labels=False, note=""):
     allowed to see the answer key, because a ceiling presented as a competitor
     is the most misleading row a benchmark can print.
     """
-    meta = {"detector": detector, "saw_labels": saw_labels, "note": note}
+    meta = {
+        "detector": detector,
+        "saw_labels": saw_labels,
+        "note": note,
+        "versions": _versions(),
+        "run_date": date.today().isoformat(),
+    }
     with open(score_path.replace(".jsonl", ".meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
         f.write("\n")

@@ -333,7 +333,7 @@ of the same head, so their agreement is the expected outcome rather than
 evidence of anything.
 
 `just realdata` opens the loop. It scores **590,540 real card-not-present
-payments with 20,663 processor-confirmed frauds** (IEEE-CIS / Vesta, 2019)
+payments with 20,663 labelled frauds** (IEEE-CIS / Vesta, 2019)
 through the same `runner.Scorer`, the same fusion, and the same metrics code
 that score the simulator. Provenance and SHA-256 are in `data/SOURCES.md`; the
 file itself is not committed.
@@ -1394,7 +1394,11 @@ library defaults over the same ten features, which is what makes the six
 comparable to each other but not what any of them could achieve with work. The
 claim is that the *family* has no representation for graph structure, and the
 right way to falsify it is to submit a better entrant — the interface is three
-fields wide.
+fields wide. Every score file carries the library versions and the date that
+produced it in its `.meta.json`, so each number is a dated fact about a
+specific build rather than a standing claim about the package. A misconfigured
+entrant is a bug in this benchmark rather than a result: open an issue with the
+config and the table gets rerun against it.
 
 **Difficulty is one attacker's idea of hard.** Four levels sweeping five knobs
 of a laundering ring is a far better instrument than a single setting, but the

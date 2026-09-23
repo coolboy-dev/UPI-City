@@ -8,8 +8,11 @@ file rather than at "some dataset we downloaded".
 ## IEEE-CIS Fraud Detection — `train_transaction.csv`
 
 Real card-not-present payments processed by Vesta Corporation, released for
-the IEEE-CIS Fraud Detection competition (2019). Labelled: `isFraud` is the
-chargeback/dispute outcome recorded by the processor, not a guess.
+the IEEE-CIS Fraud Detection competition (2019). Labelled: `isFraud` marks a
+reported chargeback, and per the competition host also the later transactions
+sharing that card or account. So a positive is a label in this dataset rather
+than 20,663 individually confirmed frauds, and recall against it is recall
+against that labelling regime.
 
 | | |
 |---|---|
@@ -18,15 +21,18 @@ chargeback/dispute outcome recorded by the processor, not a guess.
 | SHA-256 | `3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642` |
 
 ```
-curl -L -o data/train_transaction.csv \
-  https://huggingface.co/datasets/aliceczr/ieee-fraud-detection/resolve/main/train_transaction.csv
+kaggle competitions download -c ieee-fraud-detection -f train_transaction.csv \
+  -p data/ && unzip -o data/train_transaction.csv.zip -d data/
 ```
 
-**On the source.** The canonical home is Kaggle, which requires an account and
-acceptance of the competition rules before the API will serve the file. The
-HuggingFace copy above is a third-party mirror and is ungated. The header was
-checked against the published Vesta schema before use; the hash above pins the
-exact bytes, which is what matters if the mirror later changes or disappears.
+**On the source.** The dataset is not redistributed here and no copy of it is
+committed. Kaggle is the only route this file documents, and it requires an
+account and acceptance of the competition rules before the API will serve the
+file, which is the point: the terms are part of obtaining it. Use here is
+non-commercial research under those terms. The header was checked against the
+published Vesta schema before use; the hash above pins the exact bytes, so a
+number reported against this data points at one file rather than at a
+redownload that may differ.
 
 **What it can and cannot test.** The file has a payer (`card1`) but no payee —
 there is no counterparty column, and `R_emaildomain` is a recipient *domain*,
